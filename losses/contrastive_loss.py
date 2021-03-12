@@ -12,9 +12,13 @@ class NT_Xent(nn.Module):
         self.temperature = temperature
         self.world_size = world_size
 
-        self.negative_mask = self.mask_correlated_samples(batch_size, world_size).cuda()
-        self.positive_mask = torch.bitwise_not(self.negative_mask).fill_diagonal_(0)
-        self.diagonal_mask = torch.zeros_like(self.negative_mask).fill_diagonal_(1)
+        negative_mask = self.mask_correlated_samples(batch_size, world_size).cuda()
+        positive_mask = torch.bitwise_not(negative_mask).fill_diagonal_(0)
+
+        self.diagonal_mask = torch.zeros_like(negative_mask).fill_diagonal_(1)
+        # get the positive label position from the mask.
+        N = 2 * self.batch_size * self.world_size
+        self.labels = torch.masked_select(torch.arange(N).repeat(N, 1), positive_mask).cuda().long()
 
         self.criterion = nn.CrossEntropyLoss(reduction="sum")
         self.similarity_f = nn.CosineSimilarity(dim=2)
@@ -35,7 +39,6 @@ class NT_Xent(nn.Module):
         Instead, given a positive pair, similar to (Chen et al., 2017), we treat the other 2(N − 1) augmented examples within a minibatch as negative examples.
         """
         N = 2 * self.batch_size * self.world_size
-
         z = torch.cat((z_i, z_j), dim=0)
         if self.world_size > 1:
             z = torch.cat(GatherLayer.apply(z), dim=0)
@@ -45,9 +48,6 @@ class NT_Xent(nn.Module):
         # zi-zi gets reduced by a large number to make it exponent to 0.
         sim = sim - (self.diagonal_mask * 1e9)
 
-        # get the positive label position from the mask.
-        labels = torch.masked_select(torch.arange(N).repeat(N, 1), self.positive_mask).to(device=z.device).long()
-
-        loss = self.criterion(sim, labels)
+        loss = self.criterion(sim, self.labels)
         loss /= N
         return loss
