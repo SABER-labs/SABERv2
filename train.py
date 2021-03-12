@@ -18,7 +18,7 @@ model_checkpoint = ModelCheckpoint(
 	dirpath=os.path.join(config.trainer.default_root_dir, config.trainer.savewieghts_dir), 
 	save_last=True, 
 	save_top_k=1, 
-	monitor='simclr_loss'
+	monitor='train_loss'
 )
 
 callbacks = [model_checkpoint]

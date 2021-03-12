@@ -7,13 +7,13 @@ from utils.training_utils import GatherLayer
 
 class NT_Xent(nn.Module):
     def __init__(self, batch_size, temperature, world_size):
-        super(NT_Xent, self).__init__()
+        super().__init__()
         self.batch_size = batch_size
         self.temperature = temperature
         self.world_size = world_size
 
-        self.mask = self.mask_correlated_samples(batch_size, world_size)
-        self.positive_mask = self.mask.bitwise_not_().fill_diagonal_(0)
+        self.mask = self.mask_correlated_samples(batch_size, world_size).cuda()
+        self.positive_mask = self.mask.bitwise_not().fill_diagonal_(0)
         self.criterion = nn.CrossEntropyLoss(reduction="sum")
         self.similarity_f = nn.CosineSimilarity(dim=2)
 
@@ -44,7 +44,7 @@ class NT_Xent(nn.Module):
         positive_samples = torch.masked_select(sim, self.positive_mask).reshape(N,1)
         negative_samples = sim[self.mask].reshape(N, -1)
 
-        labels = torch.zeros(N).to(positive_samples.device).long()
+        labels = torch.zeros(N).to(device=z.device).long()
         logits = torch.cat((positive_samples, negative_samples), dim=1)
         loss = self.criterion(logits, labels)
         loss /= N

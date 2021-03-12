@@ -39,19 +39,17 @@ class SpeechSimClr(pl.LightningModule):
         z1 = self.projection(h1)
         z2 = self.projection(h2)
 
-        loss = self.criterion(z1, z2)
-
-        return loss
+        return self.criterion(z1, z2)
 
     def training_step(self, batch, batch_idx):
         loss = self.shared_step(batch)
         self.log('learning_rate', self.lr_schedule[self.trainer.global_step], on_step=True, on_epoch=False)
-        self.log('simclr_loss', loss, on_step=True, on_epoch=False)
+        self.log('train_loss', loss, on_step=True, on_epoch=False)
         return loss
 
     def validation_step(self, batch, batch_idx):
         loss = self.shared_step(batch)
-        self.log('simclr_loss_epoch', loss, on_step=False, on_epoch=True, sync_dist=True)
+        self.log('val_loss', loss, on_step=False, on_epoch=True, sync_dist=True)
         return loss
 
     def configure_optimizers(self):
