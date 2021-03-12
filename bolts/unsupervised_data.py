@@ -44,7 +44,7 @@ class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
     # returns: (aug1, aug2, aug1_len, aug2_len) where aug1 == (batch, time)
     def _collate_fn(self, batch):
 
-        raw_inputs = [b[0] for b in batch if b and (config.dataset.min_audio_in_s <= b[0].size(1) / b[1] <= config.dataset.max_audio_in_s)]
+        raw_inputs = [b[0] for b in batch if b]
         input_a = [self.sox_augmentations(raw_input).transpose(1, 0) for raw_input in raw_inputs]
         input_b = [self.sox_augmentations(raw_input).transpose(1, 0) for raw_input in raw_inputs]
 
