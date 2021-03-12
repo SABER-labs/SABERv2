@@ -6,3 +6,4 @@ konfik
 pandas
 scipy
 pytorch-lightning
+tqdm

@@ -2,9 +2,21 @@ from utils.config import config
 import os
 import pandas as pd
 import csv
+import torchaudio
+from tqdm import tqdm
+tqdm.pandas()
+
+def get_duration(filepath):
+    filepath = os.path.join(config.dataset.root, "clips", filepath)
+    metadata = torchaudio.info(filepath)
+    return metadata.num_frames / metadata.sample_rate
 
 if __name__ == "__main__":
     dataset = pd.read_csv(os.path.join(config.dataset.root, config.dataset.train), sep="\t")
+
+    dataset['duration'] = dataset.path.progress_apply(lambda x: get_duration(x))
+    dataset = dataset[(config.dataset.min_audio_in_s <= dataset['duration'])  & (dataset['duration'] <= config.dataset.max_audio_in_s)]
+
     unsupervised_dataset = dataset.sample(frac=1-(config.dataset.percent_split/100.0), random_state=100)
     supervised_dataset = dataset[~dataset.index.isin(unsupervised_dataset.index)]
     unsupervised_path = os.path.join(config.dataset.root, config.dataset.unsupervised_train)
