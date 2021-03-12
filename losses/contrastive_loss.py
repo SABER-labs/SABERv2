@@ -19,12 +19,13 @@ class NT_Xent(nn.Module):
 
     def mask_correlated_samples(self, batch_size, world_size):
         N = 2 * batch_size * world_size
-        mask = torch.ones((N, N), dtype=bool)
-        mask = mask.fill_diagonal_(0)
-        for i in range(batch_size * world_size):
-            mask[i, batch_size + i] = 0
-            mask[batch_size + i, i] = 0
-        return mask
+        M = batch_size
+        main = torch.ones((N,N))
+        ones_M = torch.ones(M)
+        mask = 1 - (torch.diag(torch.ones(2 * M)) + torch.diag(ones_M, batch_size) + torch.diag(ones_M, -batch_size))
+        for i in range(world_size):
+            main[i*2*batch_size:(i+1)*2*batch_size, i*2*batch_size:(i+1)*2*batch_size] *= mask
+        return main.type(torch.bool)
 
     def forward(self, z_i, z_j):
         """
@@ -39,6 +40,7 @@ class NT_Xent(nn.Module):
 
         sim = self.similarity_f(z.unsqueeze(1), z.unsqueeze(0)) / self.temperature
 
+        # TODO: this is wrong need to the right elements when it comes to world size.
         sim_i_j = torch.diag(sim, self.batch_size * self.world_size)
         sim_j_i = torch.diag(sim, -self.batch_size * self.world_size)
 
