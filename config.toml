@@ -29,7 +29,7 @@ warmup_epochs = 0.10
 weight_decay = 1e-6
 
 [dataloader]
-batch_size = 16
+batch_size = 24
 num_workers = 3
 
 [audio]
