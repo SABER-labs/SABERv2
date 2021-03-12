@@ -1,0 +1,8 @@
+# torch==1.8.0+cu112
+# torchaudio==0.8.0
+torch
+torchaudio
+konfik
+pandas
+scipy
+pytorch-lightning
