@@ -4,7 +4,7 @@ import math
 from model.quartznet import QuartzNet
 from utils.config import config
 from utils.training_utils import get_adam_warmup_cosine_schedule, length_to_mask
-from losses.contrastive_loss import nt_xent_loss
+from losses.contrastive_loss import NT_Xent
 import torch.nn.functional as F
 from model.projection_head import Projection
 from pytorch_lightning.core.optimizer import LightningOptimizer
