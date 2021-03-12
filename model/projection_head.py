@@ -19,4 +19,4 @@ class Projection(nn.Module):
     def forward(self, x):
         x = torch.mean(x, dim=2)
         x = self.model(x)
-        return F.normalize(x, dim=1)
+        return x
