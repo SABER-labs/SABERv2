@@ -14,6 +14,7 @@ class NT_Xent(nn.Module):
         self.world_size = world_size
 
         self.mask = self.mask_correlated_samples(batch_size, world_size)
+        self.positive_mask = self.mask.bitwise_not_().fill_diagonal_(0)
         self.criterion = nn.CrossEntropyLoss(reduction="sum")
         self.similarity_f = nn.CosineSimilarity(dim=2)
 
@@ -41,11 +42,11 @@ class NT_Xent(nn.Module):
         sim = self.similarity_f(z.unsqueeze(1), z.unsqueeze(0)) / self.temperature
 
         # TODO: this is wrong need to the right elements when it comes to world size.
-        sim_i_j = torch.diag(sim, self.batch_size * self.world_size)
-        sim_j_i = torch.diag(sim, -self.batch_size * self.world_size)
+        # sim_i_j = torch.diag(sim, self.batch_size * self.world_size)
+        # sim_j_i = torch.diag(sim, -self.batch_size * self.world_size)
 
         # We have 2N samples, but with Distributed training every GPU gets N examples too, resulting in: 2xNxN
-        positive_samples = torch.cat((sim_i_j, sim_j_i), dim=0).reshape(N, 1)
+        positive_samples = torch.masked_select(sim, self.positive_mask).reshape(N,1)
         negative_samples = sim[self.mask].reshape(N, -1)
 
         labels = torch.zeros(N).to(positive_samples.device).long()
