@@ -1,5 +1,4 @@
 from utils.config import config
-from utils.training_utils import SyncFunction
 import math
 import torch
 import torch.nn as nn
