@@ -13,7 +13,7 @@ class NT_Xent(nn.Module):
         self.world_size = world_size
 
         self.mask = self.mask_correlated_samples(batch_size, world_size).cuda()
-        self.positive_mask = self.mask.bitwise_not().fill_diagonal_(0)
+        self.positive_mask = torch.bitwise_not(self.mask).fill_diagonal_(0)
         self.criterion = nn.CrossEntropyLoss(reduction="sum")
         self.similarity_f = nn.CosineSimilarity(dim=2)
 
