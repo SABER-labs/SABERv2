@@ -12,8 +12,10 @@ class NT_Xent(nn.Module):
         self.temperature = temperature
         self.world_size = world_size
 
-        self.mask = self.mask_correlated_samples(batch_size, world_size).cuda()
-        self.positive_mask = torch.bitwise_not(self.mask).fill_diagonal_(0)
+        self.negative_mask = self.mask_correlated_samples(batch_size, world_size).cuda()
+        self.positive_mask = torch.bitwise_not(self.negative_mask).fill_diagonal_(0)
+        self.diagonal_mask = torch.zeros_like(self.negative_mask).fill_diagonal_(1)
+
         self.criterion = nn.CrossEntropyLoss(reduction="sum")
         self.similarity_f = nn.CosineSimilarity(dim=2)
 
@@ -40,12 +42,12 @@ class NT_Xent(nn.Module):
 
         sim = self.similarity_f(z.unsqueeze(1), z.unsqueeze(0)) / self.temperature
 
-        # We have 2N samples, but with Distributed training every GPU gets N examples too, resulting in: 2xNxN
-        positive_samples = torch.masked_select(sim, self.positive_mask).reshape(N,1)
-        negative_samples = sim[self.mask].reshape(N, -1)
+        # zi-zi gets reduced by a large number to make it exponent to 0.
+        sim = sim - (self.diagonal_mask * 1e9)
 
-        labels = torch.zeros(N).to(device=z.device).long()
-        logits = torch.cat((positive_samples, negative_samples), dim=1)
-        loss = self.criterion(logits, labels)
+        # get the positive label position from the mask.
+        labels = torch.masked_select(torch.arange(N).repeat(N, 1), self.positive_mask).to(device=z.device).long()
+
+        loss = self.criterion(sim, labels)
         loss /= N
         return loss
