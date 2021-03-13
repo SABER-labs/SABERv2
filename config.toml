@@ -15,21 +15,21 @@ min_audio_in_s = 0.5
 default_root_dir = "/media/vigi99/ssd_1tb/AudioWorkdir/SABERv2/training_artifacts"
 tensorboard_logdir = "tb_logs"
 savewieghts_dir = "weights"
-max_epochs = 100
+max_epochs = 100.0
 num_gpus = 1
 num_nodes = 1
-precision = 16
+precision = 32
 log_every_n_steps = 300
 gradient_clip_val = 0.5
 fast_dev_run = false
 start_lr = 5e-4
 final_lr = 1e-4
 learning_rate = 1e-3
-warmup_epochs = 1
+warmup_epochs = 0.1
 weight_decay = 1e-6
 
 [dataloader]
-batch_size = 24
+batch_size = 12
 num_workers = 3
 
 [audio]

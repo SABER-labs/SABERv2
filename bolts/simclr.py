@@ -15,6 +15,7 @@ class SpeechSimClr(pl.LightningModule):
     def __init__(self, num_train_samples):
         super().__init__()
         self.encoder = QuartzNet(n_mels=config.audio.n_mels)
+        self.steps_per_epoch = num_train_samples // (config.dataloader.batch_size * config.trainer.num_gpus * config.trainer.num_nodes)
         self.projection = Projection()
         self.model_stride = self.encoder.model_stride()
         self.criterion = NT_Xent(config.dataloader.batch_size, config.simclr.temperature, config.trainer.num_gpus * config.trainer.num_nodes)
@@ -48,8 +49,8 @@ class SpeechSimClr(pl.LightningModule):
         optimizer = LARSWrapper(optimizer)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
-            warmup_epochs=config.trainer.warmup_epochs,
-            max_epochs=config.trainer.max_epochs,
+            warmup_epochs=int(config.trainer.warmup_epochs * self.steps_per_epoch),
+            max_epochs=int(config.trainer.max_epochs * self.steps_per_epoch),
             warmup_start_lr=config.trainer.start_lr,
             eta_min=config.trainer.final_lr
         )
