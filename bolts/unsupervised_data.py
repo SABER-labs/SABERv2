@@ -7,6 +7,7 @@ from typing import Optional
 from transforms.audio import RandomSoxAugmentations
 from transforms.mfsc import ToMelSpec, SpecAug
 import time
+from pytorch_lightning.utilities import move_data_to_device
 
 class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
 
@@ -32,7 +33,12 @@ class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
             collate_fn=self._collate_fn
         )
 
-    def on_before_batch_transfer(self, batch, dataloader_idx):
+    def transfer_batch_to_device(self, batch, device):
+        device = device or self.device
+        self.mel_then_specaug = self.mel_then_specaug.to(device)
+        return move_data_to_device(batch, device)
+
+    def on_after_batch_transfer(self, batch, dataloader_idx):
         input_a, input_b, input_a_lengths, input_b_lengths = batch
         input_a = self.mel_then_specaug(input_a)
         input_b = self.mel_then_specaug(input_b)
