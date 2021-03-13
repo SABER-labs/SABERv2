@@ -12,13 +12,13 @@ class NT_Xent(nn.Module):
         self.temperature = temperature
         self.world_size = world_size
 
-        negative_mask = self.mask_correlated_samples(batch_size, world_size).cuda()
+        negative_mask = self.mask_correlated_samples(batch_size, world_size)
         positive_mask = torch.bitwise_not(negative_mask).fill_diagonal_(0)
 
-        self.diagonal_mask = torch.zeros_like(negative_mask).fill_diagonal_(1).detach()
+        self.register_buffer("diagonal_mask", torch.zeros_like(negative_mask).fill_diagonal_(1).detach())
         # get the positive label position from the mask.
         N = 2 * self.batch_size * self.world_size
-        self.labels = torch.masked_select(torch.arange(N).repeat(N, 1), positive_mask).cuda().long().detach()
+        self.register_buffer("labels", torch.masked_select(torch.arange(N).repeat(N, 1), positive_mask).long().detach())
 
         self.criterion = nn.CrossEntropyLoss(reduction="sum")
         self.similarity_f = nn.CosineSimilarity(dim=2)

@@ -32,7 +32,7 @@ class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
             collate_fn=self._collate_fn
         )
 
-    def on_after_batch_transfer(self, batch, dataloader_idx):
+    def on_before_batch_transfer(self, batch, dataloader_idx):
         input_a, input_b, input_a_lengths, input_b_lengths = batch
         input_a = self.mel_then_specaug(input_a)
         input_b = self.mel_then_specaug(input_b)
