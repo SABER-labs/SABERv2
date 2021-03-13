@@ -6,7 +6,7 @@ import os
 
 class ToMelSpec(torch.nn.Module):
 
-    def __init__(self, input_sample_rate: int = config.audio.model_sample_rate, device=config.spec_aug.on_device):
+    def __init__(self, input_sample_rate: int = config.audio.model_sample_rate):
         super().__init__()
         transforms = torchaudio.transforms.MelSpectrogram(
             sample_rate=input_sample_rate,
@@ -17,7 +17,7 @@ class ToMelSpec(torch.nn.Module):
             f_max=input_sample_rate/2,
             n_mels=config.audio.n_mels
         )
-        self.to_melspec = torch.jit.script(transforms).to(device)
+        self.to_melspec = torch.jit.script(transforms)
 
     '''
         input  -> (.., time)
@@ -30,7 +30,7 @@ class ToMelSpec(torch.nn.Module):
 
 class SpecAug(torch.nn.Module):
 
-    def __init__(self, input_sample_rate: int = config.audio.model_sample_rate, device=config.spec_aug.on_device):
+    def __init__(self, input_sample_rate: int = config.audio.model_sample_rate):
         super().__init__()
         transforms = nn.Sequential(
             *([torchaudio.transforms.FrequencyMasking(
@@ -38,7 +38,7 @@ class SpecAug(torch.nn.Module):
             *([torchaudio.transforms.TimeMasking(
                 time_mask_param=config.spec_aug.time_len)] * config.spec_aug.time_n),
         )
-        self.spec_aug = torch.jit.script(transforms).to(device)
+        self.spec_aug = torch.jit.script(transforms)
 
     '''
         input  -> (.., n_mels, time)
@@ -53,10 +53,10 @@ if __name__ == "__main__":
     import math
     # waveform, samplerate = torchaudio.load(os.path.join(config.dataset.root, "clips", "common_voice_en_572372.mp3"))
     waveform, samplerate = torchaudio.load(os.path.join(config.dataset.root, "clips", "common_voice_en_17970627.mp3"))
-    augmention = torch.jit.script(torch.nn.Sequential(ToMelSpec(samplerate), SpecAug(samplerate)))
+    augmention = torch.jit.script(torch.nn.Sequential(ToMelSpec(samplerate), SpecAug(samplerate))).cuda()
     for i in range(100):
         start = time.process_time()
-        augmented_waveform = augmention(waveform.to(config.spec_aug.on_device)).squeeze(0)
+        augmented_waveform = augmention(waveform.cuda()).squeeze(0)
         calculated_shape = math.ceil(waveform.size(1) / (samplerate/1000 * config.audio.stride_in_ms))
         print(f"time taken for augmentation: {(time.process_time() - start) * 1000}ms, \
             augmented shape: {augmented_waveform.shape}, calculated shape: {calculated_shape}")
