@@ -25,7 +25,7 @@ fast_dev_run = false
 start_lr = 5e-4
 final_lr = 1e-4
 learning_rate = 1e-3
-warmup_epochs = 0.10
+warmup_epochs = 1
 weight_decay = 1e-6
 
 [dataloader]

@@ -1,6 +1,6 @@
 import os
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, GPUStatsMonitor
 from utils.config import config
 from bolts.unsupervised_data import UnsupervisedCommonVoiceDataModule
 from bolts.simclr import SpeechSimClr
@@ -20,8 +20,10 @@ model_checkpoint = ModelCheckpoint(
 	save_top_k=1, 
 	monitor='train_loss'
 )
+lr_monitor = LearningRateMonitor(logging_interval='step')
+gpu_stats = GPUStatsMonitor()
 
-callbacks = [model_checkpoint]
+callbacks = [model_checkpoint, lr_monitor, gpu_stats]
 
 trainer = pl.Trainer(
 	default_root_dir=config.trainer.default_root_dir,
@@ -35,7 +37,8 @@ trainer = pl.Trainer(
 	precision=config.trainer.precision,
 	callbacks=callbacks,
 	fast_dev_run=config.trainer.fast_dev_run,
-	logger=logger
+	logger=logger,
+	terminate_on_nan=False
 )
 
 trainer.fit(simclr, datamodule=simclr_datamodule)

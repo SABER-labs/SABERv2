@@ -7,3 +7,8 @@ pandas
 scipy
 pytorch-lightning
 tqdm
+lightning-bolts
+wandb
+matplotlib
+gym
+sklearn
