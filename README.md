@@ -3,7 +3,7 @@
 Easily reproducible baselines for automatic speech recognition using semi-supervised contrastive learning.
 
 ## Data Preparation
-* Download [CommonVoice English Dataset](https://commonvoice.mozilla.org/en/datasetss)
+* Download [CommonVoice English Dataset](https://commonvoice.mozilla.org/en/datasets)
 * Setup `config.toml` to use the paths where data was downloaded.
 * Install requirements using `pip3 install -r requirements.txt`
 * Prepare data using `python3 -m dataset.prepare`
