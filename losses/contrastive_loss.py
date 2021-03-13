@@ -12,10 +12,8 @@ class NT_Xent(nn.Module):
         self.temperature = temperature
         self.world_size = world_size
 
-        negative_mask = self.mask_correlated_samples(batch_size, world_size)
-        positive_mask = torch.bitwise_not(negative_mask).fill_diagonal_(0)
-
-        self.register_buffer("diagonal_mask", torch.zeros_like(negative_mask).fill_diagonal_(1).detach())
+        positive_mask = self.mask_correlated_samples(batch_size, world_size)
+        self.register_buffer("diagonal_mask", torch.zeros_like(positive_mask).fill_diagonal_(1).detach())
         # get the positive label position from the mask.
         N = 2 * self.batch_size * self.world_size
         self.register_buffer("labels", torch.masked_select(torch.arange(N).repeat(N, 1), positive_mask).long().detach())
@@ -24,14 +22,10 @@ class NT_Xent(nn.Module):
         self.similarity_f = nn.CosineSimilarity(dim=2)
 
     def mask_correlated_samples(self, batch_size, world_size):
-        N = 2 * batch_size * world_size
-        M = batch_size
-        main = torch.ones((N,N))
-        ones_M = torch.ones(M)
-        mask = 1 - (torch.diag(torch.ones(2 * M)) + torch.diag(ones_M, batch_size) + torch.diag(ones_M, -batch_size))
-        for i in range(world_size):
-            main[i*2*batch_size:(i+1)*2*batch_size, i*2*batch_size:(i+1)*2*batch_size] *= mask
-        return main.type(torch.bool)
+        N = batch_size * world_size
+        ones_N = torch.ones(N)
+        mask = torch.diag(ones_N, N) + torch.diag(ones_N, -N)
+        return mask.type(torch.bool)
 
     def forward(self, z_i, z_j):
         """
@@ -39,9 +33,12 @@ class NT_Xent(nn.Module):
         Instead, given a positive pair, similar to (Chen et al., 2017), we treat the other 2(N − 1) augmented examples within a minibatch as negative examples.
         """
         N = 2 * self.batch_size * self.world_size
-        z = torch.cat((z_i, z_j), dim=0)
+
         if self.world_size > 1:
-            z = torch.cat(GatherLayer.apply(z), dim=0)
+            z_i = GatherLayer.apply(z_i)
+            z_j = GatherLayer.apply(z_j)
+
+        z = torch.cat((z_i, z_j), dim=0)
 
         sim = self.similarity_f(z.unsqueeze(1), z.unsqueeze(0)) / self.temperature
 

@@ -36,8 +36,8 @@ class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
         input_a, input_b, input_a_lengths, input_b_lengths = batch
         input_a = self.mel_then_specaug(input_a)
         input_b = self.mel_then_specaug(input_b)
-        input_a_lengths = (input_a_lengths / (config.audio.model_sample_rate/1000 * config.audio.stride_in_ms)).ceil_().to(dtype=input_a_lengths.dtype, device=input_a_lengths.device)
-        input_b_lengths = (input_b_lengths / (config.audio.model_sample_rate/1000 * config.audio.stride_in_ms)).ceil_().to(dtype=input_b_lengths.dtype, device=input_b_lengths.device)
+        input_a_lengths = (input_a_lengths / (config.audio.model_sample_rate/1000 * config.audio.stride_in_ms)).ceil_()
+        input_b_lengths = (input_b_lengths / (config.audio.model_sample_rate/1000 * config.audio.stride_in_ms)).ceil_()
         return (input_a, input_b, input_a_lengths, input_b_lengths)
 
     # input: batch -> (waveform, sample_rate, dictionary)
