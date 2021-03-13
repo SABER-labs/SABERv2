@@ -36,7 +36,7 @@ trainer = pl.Trainer(
 	callbacks=callbacks,
 	fast_dev_run=config.trainer.fast_dev_run,
 	logger=logger,
-	terminate_on_nan=True,
+	terminate_on_nan=False,
 	# resume_from_checkpoint=os.path.join(config.trainer.default_root_dir, config.trainer.savewieghts_dir)
 )
 

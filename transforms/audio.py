@@ -41,7 +41,7 @@ class RandomSoxAugmentations(object):
             ['vol', str(uniform(*config.augmentations.vol_range_in_db)), 'dB'],
             ['pitch', '-q', str(uniform(*config.augmentations.pitch_range_in_cents))],
             ['tempo', '-q', '-s', str(uniform(*config.augmentations.tempo_range))],
-            ['lowpass', '-2', str(config.augmentations.lowpass_cutoff)]
+            ['lowpass', '-2', str(uniform(*config.augmentations.lowpass_cutoff))]
         ]
         self.augmentation_prob = config.augmentations.apply_prob
         self.noise_file_list = [

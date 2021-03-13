@@ -1,7 +1,8 @@
 title = "SABER Configurations"
 
 [dataset]
-root = "/media/vigi99/ssd_1tb/AudioData/cv-corpus-6.1-2020-12-11/en"
+# root = "/media/vigi99/ssd_1tb/AudioData/cv-corpus-6.1-2020-12-11/en"
+root = "/dev/shm/cv-corpus-6.1-2020-12-11/en"
 train = "validated.tsv"
 test = "test.tsv"
 unsupervised_train = "unsupervised_train.tsv"
@@ -12,50 +13,51 @@ max_audio_in_s = 13.5
 min_audio_in_s = 0.5
 
 [trainer]
-default_root_dir = "/media/vigi99/ssd_1tb/AudioWorkdir/SABERv2/training_artifacts"
+# default_root_dir = "/media/vigi99/ssd_1tb/AudioWorkdir/SABERv2/training_artifacts"
+default_root_dir = "/tts_data/SABERV2/training_artifacts"
 tensorboard_logdir = "tb_logs"
 savewieghts_dir = "weights"
 max_epochs = 100
-num_gpus = 1
+num_gpus = 3
 num_nodes = 1
 precision = 32
-log_every_n_steps = 300
-gradient_clip_val = 0
+log_every_n_steps = 50
+gradient_clip_val = 0.5
 fast_dev_run = false
 start_lr = 5e-4
 final_lr = 1e-4
 learning_rate = 1e-3
-warmup_epochs = 0.5
+warmup_epochs = 0.3
 weight_decay = 1e-6
 
 [dataloader]
-batch_size = 12
-num_workers = 3
+batch_size = 48
+num_workers = 32
 
 [audio]
-n_mels = 67
+n_mels = 80
 window_size_in_ms = 25
 stride_in_ms = 10
-model_sample_rate = 8000
+model_sample_rate = 16000
 
 [augmentations]
-vol_range_in_db = [-10, 20]
+vol_range_in_db = [-25, 10]
 pitch_range_in_cents = [-400, 400]
-lowpass_cutoff = 2000
+lowpass_cutoff = [1500, 4000]
 tempo_range = [0.75, 1.5]
 apply_prob = 0.3
 
 [spec_aug]
 freq_len = 27
 time_len = 100
-freq_n = 2
-time_n = 2
-on_device = "cuda"
+freq_n = 1
+time_n = 1
 
 [noises]
-noises_root = "/media/vigi99/ssd_1tb/AudioData/noises"
+# noises_root = "/media/vigi99/ssd_1tb/AudioData/noises"
+noises_root = "/dev/shm/noises"
 noisefilelist = "noiselist.txt"
-snr_range = [3, 20]
+snr_range = [5, 20]
 
 [simclr]
 projection_head_dim = 1024
