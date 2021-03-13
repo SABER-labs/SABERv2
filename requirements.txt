@@ -1,14 +1,15 @@
-# torch==1.8.0+cu112
-# torchaudio==0.8.0
-torch
-torchaudio
 konfik
 pandas
 scipy
-pytorch-lightning
 tqdm
-lightning-bolts
 wandb
 matplotlib
 gym
 sklearn
+# torch==1.8.0+cu112
+# torchaudio==0.8.0
+fairscale==0.3.1
+torch==1.8.0
+torchaudio==0.8.0
+lightning-bolts==0.3.1
+pytorch-lightning==1.2.3

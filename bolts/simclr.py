@@ -44,6 +44,11 @@ class SpeechSimClr(pl.LightningModule):
         self.log('train_loss', loss, on_step=True, on_epoch=False)
         return loss
 
+    def get_progress_bar_dict(self):
+        items = super().get_progress_bar_dict()
+        items.pop("v_num", None)
+        return items
+
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=config.trainer.learning_rate, weight_decay=config.trainer.weight_decay)
         optimizer = LARSWrapper(optimizer)
