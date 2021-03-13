@@ -13,7 +13,7 @@ class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
     def __init__(self):
         super().__init__()
         self.sox_augmentations = RandomSoxAugmentations(config.dataset.sample_rate)
-        self.mel_then_specaug = torch.jit.script(torch.nn.Sequential(ToMelSpec(), SpecAug())).to(torch.cuda.current_device())
+        self.mel_then_specaug = torch.jit.script(torch.nn.Sequential(ToMelSpec(), SpecAug()))
 
     def setup(self, stage: Optional[str] = None):
         self.unsupervised_dataset = torchaudio.datasets.COMMONVOICE(
