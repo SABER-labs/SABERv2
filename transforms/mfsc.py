@@ -8,7 +8,7 @@ class ToMelSpec(torch.nn.Module):
 
     def __init__(self, input_sample_rate: int = config.audio.model_sample_rate):
         super().__init__()
-        transforms = torchaudio.transforms.MelSpectrogram(
+        self.to_melspec = torchaudio.transforms.MelSpectrogram(
             sample_rate=input_sample_rate,
             win_length=int(input_sample_rate/1000 *
                            config.audio.window_size_in_ms),
@@ -17,8 +17,6 @@ class ToMelSpec(torch.nn.Module):
             f_max=input_sample_rate/2,
             n_mels=config.audio.n_mels
         )
-        self.to_melspec = torch.jit.script(transforms)
-
     '''
         input  -> (.., time)
         output -> (.., n_mels, time)
@@ -32,14 +30,12 @@ class SpecAug(torch.nn.Module):
 
     def __init__(self, input_sample_rate: int = config.audio.model_sample_rate):
         super().__init__()
-        transforms = nn.Sequential(
+        self.spec_aug = nn.Sequential(
             *([torchaudio.transforms.FrequencyMasking(
                 freq_mask_param=config.spec_aug.freq_len)] * config.spec_aug.freq_n),
             *([torchaudio.transforms.TimeMasking(
                 time_mask_param=config.spec_aug.time_len)] * config.spec_aug.time_n),
         )
-        self.spec_aug = torch.jit.script(transforms)
-
     '''
         input  -> (.., n_mels, time)
         output -> (.., n_mels, time)
