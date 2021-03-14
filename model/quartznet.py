@@ -9,7 +9,7 @@ def conv_bn_act(in_size, out_size, kernel_size, stride=1, dilation=1):
     return nn.Sequential(
         nn.Conv1d(in_size, out_size, kernel_size, stride, dilation=dilation),
         nn.BatchNorm1d(out_size),
-        nn.ReLU()
+        nn.Hardswish()
     )
 
 
@@ -35,7 +35,7 @@ class QnetBlock(nn.Module):
         self.layers = nn.ModuleList(sepconv_bn(
             in_size, out_size, kernel_size, stride))
         for _ in range(R - 1):
-            self.layers.append(nn.ReLU())
+            self.layers.append(nn.Hardswish())
             self.layers.append(sepconv_bn(
                 out_size, out_size, kernel_size, stride))
         self.layers = nn.Sequential(*self.layers)
@@ -46,7 +46,7 @@ class QnetBlock(nn.Module):
         self.residual = nn.Sequential(*self.residual)
 
     def forward(self, x):
-        return F.relu(self.residual(x) + self.layers(x))
+        return F.hardswish(self.residual(x) + self.layers(x))
 
 
 class QuartzNet(nn.Module):
@@ -68,8 +68,8 @@ class QuartzNet(nn.Module):
         return 2
 
     def forward(self, x):
-        c1 = F.relu(self.c1(x))
+        c1 = F.hardswish(self.c1(x))
         blocks = self.blocks(c1)
-        c2 = F.relu(self.c2(blocks))
+        c2 = F.hardswish(self.c2(blocks))
         c3 = self.c3(c2)
         return c3

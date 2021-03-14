@@ -5,16 +5,14 @@ from utils.config import config
 
 class Projection(nn.Module):
 
-    def __init__(self, hidden_dim=config.simclr.projection_head_dim, num_heads=config.simclr.num_projection_heads):
+    def __init__(self, hidden_dim=config.simclr.projection_head_dim, final_embedding_dim=config.simclr.final_embedding_dim):
         super().__init__()
-        self.hidden_dim = hidden_dim
 
-        heads = []
-        for _ in range(num_heads - 1):
-            heads.extend([nn.Linear(self.hidden_dim, self.hidden_dim, bias=False), nn.ReLU()])
-
-        heads += [nn.Linear(self.hidden_dim, self.hidden_dim, bias=False)]
-        self.model = nn.Sequential(*heads)
+        self.model = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim), nn.BatchNorm1d(hidden_dim), nn.Hardswish(),
+            nn.Linear(hidden_dim, hidden_dim), nn.BatchNorm1d(hidden_dim), nn.Hardswish(),
+            nn.Linear(hidden_dim, final_embedding_dim, bias=False)
+        )
 
     def forward(self, x):
         x = torch.mean(x, dim=2)

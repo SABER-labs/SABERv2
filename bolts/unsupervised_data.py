@@ -30,6 +30,7 @@ class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
             num_workers=config.dataloader.num_workers,
             pin_memory=True,
             drop_last=True,
+            shuffle=True,
             collate_fn=self._collate_fn
         )
 

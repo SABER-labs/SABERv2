@@ -14,6 +14,8 @@ def get_duration(filepath):
 if __name__ == "__main__":
     dataset = pd.read_csv(os.path.join(config.dataset.root, config.dataset.train), sep="\t")
 
+    original_length = len(dataset)
+
     dataset['duration'] = dataset.path.progress_apply(lambda x: get_duration(x))
     dataset = dataset[(config.dataset.min_audio_in_s <= dataset['duration'])  & (dataset['duration'] <= config.dataset.max_audio_in_s)]
 
@@ -25,4 +27,4 @@ if __name__ == "__main__":
     supervised_dataset.to_csv(supervised_path, sep="\t", quoting=csv.QUOTE_NONE, header=True, index=False)
     print(f"Unsupervised set created at {unsupervised_path} with {len(unsupervised_dataset)} files.")
     print(f"Supervised set created at {supervised_path} with {len(supervised_dataset)} files.")
-    print(f"Num files filtered = {len(dataset) - len(unsupervised_dataset) - len(supervised_dataset)}")
+    print(f"Num files filtered = {original_length - len(unsupervised_dataset) - len(supervised_dataset)}")
