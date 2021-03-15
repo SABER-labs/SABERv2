@@ -61,6 +61,6 @@ snr_range = [3, 20]
 
 [simclr]
 projection_head_dim = 1024
-final_embedding_dim = 256
+final_embedding_dim = 128
 temperature = 0.1
 margin = 0.35
