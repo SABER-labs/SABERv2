@@ -17,7 +17,7 @@ min_audio_in_s = 2.0
 default_root_dir = "/tts_data/SABERV2/training_artifacts"
 tensorboard_logdir = "tb_logs"
 savewieghts_dir = "weights"
-max_epochs = 100
+max_epochs = 150
 num_gpus = 3
 num_nodes = 1
 precision = 32
@@ -27,7 +27,7 @@ fast_dev_run = false
 start_lr = 5e-4
 final_lr = 1e-4
 learning_rate = 1e-3
-warmup_epochs = 0.8
+warmup_epochs = 3.0
 weight_decay = 1e-6
 
 [dataloader]
