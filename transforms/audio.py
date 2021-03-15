@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torchaudio
 from utils.config import config
+import numpy as np
 from numpy.random import uniform, randint
 from torchaudio.sox_effects import apply_effects_tensor
 import os
@@ -60,12 +61,12 @@ class RandomSoxAugmentations(object):
         speech_power = sample.norm(p=2)
         noise_power = noise.norm(p=2)
         snr = math.exp(uniform(*config.noises.snr_range) / 10)
-        scale = snr * noise_power / speech_power
-        noisy_speech = (scale * sample + noise) / 2
+        scale = np.clip(snr * noise_power / speech_power, 1, 8)
+        noisy_speech = (scale * sample + noise) / (scale + 1)
         return noisy_speech
 
     def __call__(self, sample: torch.Tensor):
-        effects = random.sample(self.augmentations, k=randint(1, 4)) + [['rate', str(config.audio.model_sample_rate)]]
+        effects = random.sample(self.augmentations, k=randint(1, len(self.augmentations))) + [['rate', str(config.audio.model_sample_rate)]]
         augmented_sample, _ = apply_effects_tensor(sample, self.sample_rate, effects, channels_first=True)
         if uniform(0.0, 1.0) <= self.augmentation_prob:
             augmented_sample = self.__add_noise(augmented_sample)
