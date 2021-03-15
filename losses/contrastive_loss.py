@@ -6,7 +6,7 @@ import torch.distributed as dist
 from utils.training_utils import GatherLayer
 
 class NT_Xent(nn.Module):
-    def __init__(self, batch_size, temperature, world_size):
+    def __init__(self, batch_size, temperature, world_size, margin):
         super().__init__()
         self.batch_size = batch_size
         self.temperature = temperature
@@ -14,6 +14,7 @@ class NT_Xent(nn.Module):
 
         positive_mask = self.mask_correlated_samples(batch_size, world_size)
         self.register_buffer("diagonal_mask", torch.zeros_like(positive_mask).fill_diagonal_(1).detach())
+        self.register_buffer("masked_margin", positive_mask * margin)
         # get the positive label position from the mask.
         N = 2 * self.batch_size * self.world_size
         self.register_buffer("labels", torch.masked_select(torch.arange(N).repeat(N, 1), positive_mask).long().detach())
@@ -40,7 +41,7 @@ class NT_Xent(nn.Module):
 
         z = torch.cat((z_i, z_j), dim=0)
 
-        sim = self.similarity_f(z.unsqueeze(1), z.unsqueeze(0)) / self.temperature
+        sim = (self.similarity_f(z.unsqueeze(1), z.unsqueeze(0)) - self.masked_margin) / self.temperature
 
         # zi-zi gets reduced by a large number to make it exponent to 0.
         sim = sim - (self.diagonal_mask * 1e9)

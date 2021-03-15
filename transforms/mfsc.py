@@ -32,9 +32,9 @@ class SpecAug(torch.nn.Module):
         super().__init__()
         self.spec_aug = nn.Sequential(
             *([torchaudio.transforms.FrequencyMasking(
-                freq_mask_param=config.spec_aug.freq_len)] * config.spec_aug.freq_n),
+                freq_mask_param=config.spec_aug.freq_len, iid_masks=True)] * config.spec_aug.freq_n),
             *([torchaudio.transforms.TimeMasking(
-                time_mask_param=config.spec_aug.time_len)] * config.spec_aug.time_n),
+                time_mask_param=config.spec_aug.time_len, iid_masks=True)] * config.spec_aug.time_n),
         )
     '''
         input  -> (.., n_mels, time)

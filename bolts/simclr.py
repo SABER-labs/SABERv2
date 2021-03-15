@@ -18,7 +18,12 @@ class SpeechSimClr(pl.LightningModule):
         self.steps_per_epoch = num_train_samples // (config.dataloader.batch_size * config.trainer.num_gpus * config.trainer.num_nodes)
         self.projection = Projection()
         self.model_stride = self.encoder.model_stride()
-        self.criterion = NT_Xent(config.dataloader.batch_size, config.simclr.temperature, config.trainer.num_gpus * config.trainer.num_nodes)
+        self.criterion = NT_Xent(
+            config.dataloader.batch_size,
+            config.simclr.temperature,
+            config.trainer.num_gpus * config.trainer.num_nodes,
+            config.simclr.margin
+        )
 
     def forward(self, x):
         return self.encoder(x)
@@ -51,7 +56,7 @@ class SpeechSimClr(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=config.trainer.learning_rate, weight_decay=config.trainer.weight_decay)
-        # optimizer = LARSWrapper(optimizer)
+        optimizer = LARSWrapper(optimizer, eta=0.001)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=int(config.trainer.warmup_epochs * self.steps_per_epoch),

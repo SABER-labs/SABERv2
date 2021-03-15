@@ -3,3 +3,4 @@ training_artifacts/
 __pycache__/
 rsync.sh
 exclude.txt
+notebooks/

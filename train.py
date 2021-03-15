@@ -5,7 +5,7 @@ from utils.config import config
 from bolts.unsupervised_data import UnsupervisedCommonVoiceDataModule
 from bolts.simclr import SpeechSimClr
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.plugins import DDPShardedPlugin
+from pytorch_lightning.plugins import DDPPlugin, DDPShardedPlugin
 
 simclr_datamodule = UnsupervisedCommonVoiceDataModule()
 simclr_datamodule.prepare_data()
@@ -30,7 +30,7 @@ trainer = pl.Trainer(
     gpus=config.trainer.num_gpus,
     max_epochs=config.trainer.max_epochs,
     accelerator='ddp' if config.trainer.num_gpus > 1 else None,
-    plugins=DDPShardedPlugin(
+    plugins=DDPPlugin(
         find_unused_parameters=False) if config.trainer.num_gpus > 1 else None,
     num_nodes=config.trainer.num_nodes,
     log_every_n_steps=config.trainer.log_every_n_steps,
@@ -40,6 +40,11 @@ trainer = pl.Trainer(
     fast_dev_run=config.trainer.fast_dev_run,
     logger=logger,
     terminate_on_nan=True,
+    # overfit_batches=0.05,
+    # track_grad_norm=2,
+    # overfit_batches=0.01,
+    # profiler=True
+    # weights_summary='full'
     # resume_from_checkpoint=os.path.join(config.trainer.default_root_dir, config.trainer.savewieghts_dir)
 )
 
