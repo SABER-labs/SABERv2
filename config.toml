@@ -2,7 +2,9 @@ title = "SABER Configurations"
 
 [dataset]
 # root = "/media/vigi99/ssd_1tb/AudioData/cv-corpus-6.1-2020-12-11/en"
+# test_root = "/media/vigi99/ssd_1tb/AudioData/simclr_test"
 root = "/dev/shm/cv-corpus-6.1-2020-12-11/en"
+test_root ="/dev/shm/simclr_test"
 train = "validated.tsv"
 test = "test.tsv"
 unsupervised_train = "unsupervised_train.tsv"
