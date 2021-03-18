@@ -19,8 +19,8 @@ class NT_Xent(nn.Module):
         N = 2 * self.batch_size * self.world_size
         self.register_buffer("labels", torch.masked_select(torch.arange(N).repeat(N, 1), positive_mask).long().detach())
 
-        self.criterion = nn.CrossEntropyLoss(reduction="sum")
-        self.similarity_f = nn.CosineSimilarity(dim=2)
+        self.criterion = nn.CrossEntropyLoss(reduction="mean")
+        self.similarity_f = nn.CosineSimilarity(dim=2, eps=1e-6)
 
     def mask_correlated_samples(self, batch_size, world_size):
         N = batch_size * world_size
@@ -33,8 +33,6 @@ class NT_Xent(nn.Module):
         We do not sample negative examples explicitly.
         Instead, given a positive pair, similar to (Chen et al., 2017), we treat the other 2(N − 1) augmented examples within a minibatch as negative examples.
         """
-        N = 2 * self.batch_size * self.world_size
-
         if self.world_size > 1:
             z_i = GatherLayer.apply(z_i)
             z_j = GatherLayer.apply(z_j)
@@ -47,5 +45,4 @@ class NT_Xent(nn.Module):
         sim = sim - (self.diagonal_mask * 1e9)
 
         loss = self.criterion(sim, self.labels)
-        loss /= N
         return loss
