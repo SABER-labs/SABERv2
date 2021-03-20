@@ -18,3 +18,33 @@ class Projection(nn.Module):
         x = torch.mean(x, dim=2)
         x = self.model(x)
         return x
+
+class SimSiamProjection(nn.Module):
+
+    def __init__(self, in_dim=config.model.output_dim, hid_dim=config.simsiam.projection_hid_dim, out_dim=config.simsiam.projection_hid_dim):
+        super().__init__()
+
+        self.model = nn.Sequential(
+            nn.Linear(in_dim, hid_dim), nn.BatchNorm1d(hid_dim), nn.Hardswish(inplace=True),
+            nn.Linear(hid_dim, hid_dim), nn.BatchNorm1d(hid_dim), nn.Hardswish(inplace=True),
+            nn.Linear(hid_dim, out_dim), nn.BatchNorm1d(out_dim)
+        )
+
+    def forward(self, x):
+        x = torch.mean(x, dim=2)
+        x = self.model(x)
+        return x
+
+class SimSiamPrediction(nn.Module):
+
+    def __init__(self, in_dim=config.simsiam.projection_hid_dim, hid_dim=config.simsiam.prediction_hid_dim, out_dim=config.simsiam.prediction_out_dim):
+        super().__init__()
+
+        self.model = nn.Sequential(
+            nn.Linear(in_dim, hid_dim), nn.BatchNorm1d(hid_dim), nn.Hardswish(inplace=True),
+            nn.Linear(hid_dim, out_dim, bias=False)
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        return x

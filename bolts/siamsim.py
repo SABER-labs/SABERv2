@@ -1,29 +1,22 @@
 import pytorch_lightning as pl
 import torch
-import math
 from model.quartznet import QuartzNet
 from utils.config import config
 from utils.training_utils import length_to_mask
-from losses.contrastive_loss import NT_Xent
-import torch.nn.functional as F
-from model.projection_head import Projection
-from pl_bolts.optimizers.lars_scheduling import LARSWrapper
+from losses.contrastive_loss import SimSiamLoss
+from model.projection_head import SimSiamProjection, SimSiamPrediction
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 
-class SpeechSimClr(pl.LightningModule):
+class Simsiam(pl.LightningModule):
 
     def __init__(self, num_samples):
         super().__init__()
         self.encoder = QuartzNet(n_mels=config.audio.n_mels)
         self.steps_per_epoch = (num_samples // (config.dataloader.batch_size * config.trainer.num_gpus * config.trainer.num_nodes)) + 1
-        self.projection = Projection()
+        self.projection = SimSiamProjection()
+        self.prediction = SimSiamPrediction()
         self.model_stride = self.encoder.model_stride()
-        self.criterion = NT_Xent(
-            config.dataloader.batch_size,
-            config.simclr.temperature,
-            config.trainer.num_gpus * config.trainer.num_nodes,
-            config.simclr.margin
-        )
+        self.criterion = SimSiamLoss()
 
     def forward(self, x):
         return self.encoder(x)
@@ -42,7 +35,10 @@ class SpeechSimClr(pl.LightningModule):
         z1 = self.projection(h1)
         z2 = self.projection(h2)
 
-        return self.criterion(z1, z2)
+        p1 = self.prediction(z1)
+        p2 = self.prediction(z2)
+
+        return (self.criterion(p1, z1) / 2) + (self.criterion(p2, z2) / 2)
 
     def training_step(self, batch, batch_idx):
         loss = self.shared_step(batch)
@@ -54,8 +50,9 @@ class SpeechSimClr(pl.LightningModule):
         h_mask = length_to_mask(img_len, stride=self.model_stride, max_len=img.size(2))
         h = self(img) * h_mask[:, None, :]
         z = self.projection(h)
+        p = self.prediction(z)
         similarity_f = torch.nn.CosineSimilarity(dim=2)
-        scores = similarity_f(z.unsqueeze(1), z.unsqueeze(0))
+        scores = similarity_f(p.unsqueeze(1), z.unsqueeze(0))
         self.print("\n")
         self.print(scores)
         self.print(f"Account Balance positive 1 - arjun x mohit = {scores[0][3]}")
@@ -75,7 +72,6 @@ class SpeechSimClr(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=config.trainer.learning_rate, weight_decay=config.trainer.weight_decay)
-        optimizer = LARSWrapper(optimizer, eta=0.001, clip=False)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=int(config.trainer.warmup_epochs * self.steps_per_epoch),

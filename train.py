@@ -30,8 +30,7 @@ trainer = pl.Trainer(
     gpus=config.trainer.num_gpus,
     max_epochs=config.trainer.max_epochs,
     accelerator='ddp' if config.trainer.num_gpus > 1 else None,
-    plugins=DDPPlugin(
-        find_unused_parameters=False) if config.trainer.num_gpus > 1 else None,
+    plugins=DDPPlugin(find_unused_parameters=False, sync_batchnorm=True) if config.trainer.num_gpus > 1 else None,
     num_nodes=config.trainer.num_nodes,
     log_every_n_steps=config.trainer.log_every_n_steps,
     gradient_clip_val=config.trainer.gradient_clip_val,
@@ -40,6 +39,7 @@ trainer = pl.Trainer(
     fast_dev_run=config.trainer.fast_dev_run,
     logger=logger,
     terminate_on_nan=True,
+    sync_batchnorm=True if config.trainer.num_gpus > 1 else False,
     # overfit_batches=0.05,
     # track_grad_norm=2,
     # overfit_batches=0.01,

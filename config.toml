@@ -24,17 +24,17 @@ num_gpus = 3
 num_nodes = 1
 precision = 32
 log_every_n_steps = 50
-gradient_clip_val = 0.5
+gradient_clip_val = 0.0
 fast_dev_run = false
 start_lr = 5e-4
 final_lr = 1e-4
 learning_rate = 1e-3
-warmup_epochs = 3.0
+warmup_epochs = 4.5
 weight_decay = 1e-6
 
 [dataloader]
 batch_size = 48
-num_workers = 32
+num_workers = 60
 
 [audio]
 n_mels = 80
@@ -61,8 +61,16 @@ noises_root = "/dev/shm/noises"
 noisefilelist = "noiselist.txt"
 snr_range = [3, 20]
 
+[model]
+output_dim = 1024
+
 [simclr]
 projection_head_dim = 1024
 final_embedding_dim = 128
 temperature = 0.1
 margin = 0.35
+
+[simsiam]
+projection_hid_dim = 2048
+prediction_hid_dim = 512
+prediction_out_dim = 2048

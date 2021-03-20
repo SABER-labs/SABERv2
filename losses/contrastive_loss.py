@@ -2,6 +2,7 @@ from utils.config import config
 import math
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.distributed as dist
 from utils.training_utils import GatherLayer
 
@@ -46,3 +47,10 @@ class NT_Xent(nn.Module):
 
         loss = self.criterion(sim, self.labels)
         return loss
+
+class SimSiamLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, p, z):
+        return -F.cosine_similarity(p, z.detach(), dim=-1).mean()
