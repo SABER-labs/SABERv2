@@ -74,3 +74,7 @@ margin = 0.3
 projection_hid_dim = 2048
 prediction_hid_dim = 512
 prediction_out_dim = 2048
+
+[barlow_twins]
+projection_hid_dim = 8192
+projection_out_dim = 8192

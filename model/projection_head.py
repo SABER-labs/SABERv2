@@ -19,6 +19,22 @@ class Projection(nn.Module):
         x = self.model(x)
         return x
 
+class BarlowTwinsProjection(nn.Module):
+
+    def __init__(self, in_dim=config.model.output_dim, hid_dim=config.barlow_twins.projection_hid_dim, out_dim=config.barlow_twins.projection_out_dim):
+        super().__init__()
+
+        self.model = nn.Sequential(
+            nn.Linear(in_dim, hid_dim), nn.BatchNorm1d(hid_dim), nn.Hardswish(inplace=True),
+            nn.Linear(hid_dim, hid_dim), nn.BatchNorm1d(hid_dim), nn.Hardswish(inplace=True),
+            nn.Linear(hid_dim, out_dim)
+        )
+
+    def forward(self, x):
+        x = torch.mean(x, dim=2)
+        x = self.model(x)
+        return x
+
 class SimSiamProjection(nn.Module):
 
     def __init__(self, in_dim=config.model.output_dim, hid_dim=config.simsiam.projection_hid_dim, out_dim=config.simsiam.projection_hid_dim):

@@ -54,3 +54,21 @@ class SimSiamLoss(nn.Module):
 
     def forward(self, p, z):
         return -F.cosine_similarity(p, z.detach(), dim=-1).mean()
+
+class BarlowTwinsLoss(torch.nn.Module):
+
+    def __init__(self, dim=config.barlow_twins.projection_out_dim , lambda_param=5e-3):
+        super(BarlowTwinsLoss, self).__init__()
+        self.lambda_param = lambda_param
+        self.register_buffer("d_eye_mask", torch.eye(dim, dtype=bool))
+
+    def forward(self, z_a: torch.Tensor, z_b: torch.Tensor):
+        z_a_norm = (z_a - z_a.mean(0)) / z_a.std(0) # NxD
+        z_b_norm = (z_b - z_b.mean(0)) / z_b.std(0) # NxD
+        N = z_a.size(0)
+        c = torch.mm(z_a_norm.T, z_b_norm) / N # DxD
+        c_diag = c.diagonal() #Diagonal view
+        c_diag -= 1 # diagonal elements of c got subtracted by 1, faster than doing c - eye(c.size(0))
+        c_diff = c.pow(2) # DxD
+        c_diff[~self.d_eye_mask] *= self.lambda_param
+        return c_diff.sum()
