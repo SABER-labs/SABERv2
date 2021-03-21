@@ -4,16 +4,18 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from utils.config import config
 from bolts.unsupervised_data import UnsupervisedCommonVoiceDataModule
 from bolts.simclr import SpeechSimClr
+from bolts.siamsim import Simsiam
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins import DDPPlugin, DDPShardedPlugin
 
-simclr_datamodule = UnsupervisedCommonVoiceDataModule()
-simclr_datamodule.prepare_data()
-simclr_datamodule.setup(stage='fit')
+ssl_datamodule = UnsupervisedCommonVoiceDataModule()
+ssl_datamodule.prepare_data()
+ssl_datamodule.setup(stage='fit')
 
-simclr = SpeechSimClr(num_samples=simclr_datamodule.num_train_samples())
+# ssl = Simsiam(num_samples=ssl_datamodule.num_train_samples())
+ssl = SpeechSimClr(num_samples=ssl_datamodule.num_train_samples())
 logger = TensorBoardLogger(os.path.join(
-    config.trainer.default_root_dir, config.trainer.tensorboard_logdir), name='simclr')
+    config.trainer.default_root_dir, config.trainer.tensorboard_logdir), name='ssl')
 
 model_checkpoint = ModelCheckpoint(
     dirpath=os.path.join(config.trainer.default_root_dir,
@@ -48,4 +50,4 @@ trainer = pl.Trainer(
     # resume_from_checkpoint=os.path.join(config.trainer.default_root_dir, config.trainer.savewieghts_dir)
 )
 
-trainer.fit(simclr, datamodule=simclr_datamodule)
+trainer.fit(ssl, datamodule=ssl_datamodule)
