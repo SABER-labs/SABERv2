@@ -11,7 +11,7 @@ simclr_datamodule = UnsupervisedCommonVoiceDataModule()
 simclr_datamodule.prepare_data()
 simclr_datamodule.setup(stage='fit')
 
-simclr = SpeechSimClr(num_samples=simclr_datamodule.num_train_samples())
+simclr = SpeechSimClr(num_samples=simclr_datamodule.num_train_samples(), similarity=config.model.similarity)
 logger = TensorBoardLogger(os.path.join(
     config.trainer.default_root_dir, config.trainer.tensorboard_logdir), name='simclr')
 

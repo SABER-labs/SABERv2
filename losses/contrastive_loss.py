@@ -54,3 +54,48 @@ class SimSiamLoss(nn.Module):
 
     def forward(self, p, z):
         return -F.cosine_similarity(p, z.detach(), dim=-1).mean()
+
+
+
+class BLN_loss(nn.Module):
+    def __init__(self, dim, batch_size, temperature, world_size):
+        super().__init__()
+        self.batch_size = batch_size
+        self.temperature = temperature
+        self.world_size = world_size
+
+        self.positive_mask = self.mask_correlated_samples(batch_size, world_size)
+        self.register_buffer("diagonal_mask", torch.zeros_like(positive_mask).fill_diagonal_(1).detach())
+
+        N = 2 * self.batch_size * self.world_size
+        self.register_buffer("labels", torch.masked_select(torch.arange(N).repeat(N, 1), positive_mask).long().detach())
+
+        self.bln_similarity = nn.Linear(dim, dim, False)
+    
+    def mask_correlated_samples(self, batch_size, world_size):
+        N = batch_size * world_size
+        ones_N = torch.ones(N)
+        mask = torch.diag(ones_N, N) + torch.diag(ones_N, -N)
+        return mask.type(torch.bool)
+
+    def forward(self, z_i, z_j):
+        """
+        We do not sample negative examples explicitly.
+        Instead, given a positive pair, similar to (Chen et al., 2017), we treat the other 2(N − 1) augmented examples within a minibatch as negative examples.
+        """
+        if self.world_size > 1:
+            z_i = GatherLayer.apply(z_i)
+            z_j = GatherLayer.apply(z_j)
+
+        z = torch.cat((z_i, z_j), dim=0)
+
+        sim = torch.matmul(self.bln_similarity(z), torch.transpose(z))/self.temperature
+
+        # zi-zi gets reduced by a large number to make it exponent to 0.
+        sim = sim - (self.diagonal_mask * 1e9)
+
+        loss = self.criterion(sim, self.labels)
+
+        return loss
+
+

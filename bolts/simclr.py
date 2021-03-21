@@ -4,7 +4,7 @@ import math
 from model.quartznet import QuartzNet
 from utils.config import config
 from utils.training_utils import length_to_mask
-from losses.contrastive_loss import NT_Xent
+from losses.contrastive_loss import *
 import torch.nn.functional as F
 from model.projection_head import Projection
 from pl_bolts.optimizers.lars_scheduling import LARSWrapper
@@ -12,19 +12,26 @@ from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 
 class SpeechSimClr(pl.LightningModule):
 
-    def __init__(self, num_samples):
+    def __init__(self, num_samples, similarity="cosine"):
         super().__init__()
         self.encoder = QuartzNet(n_mels=config.audio.n_mels)
         self.steps_per_epoch = (num_samples // (config.dataloader.batch_size * config.trainer.num_gpus * config.trainer.num_nodes)) + 1
         self.projection = Projection()
-        self.model_stride = self.encoder.model_stride()
-        self.criterion = NT_Xent(
-            config.dataloader.batch_size,
-            config.simclr.temperature,
-            config.trainer.num_gpus * config.trainer.num_nodes,
-            config.simclr.margin
-        )
-
+        self.model_stride = self.encoder.model_stride() 
+        if similarity == "cosine":
+            self.criterion = NT_Xent(
+                config.dataloader.batch_size,
+                config.simclr.temperature,
+                config.trainer.num_gpus * config.trainer.num_nodes,
+                config.simclr.margin
+            )
+        else:
+            self.criterion = BLN_loss(\
+                config.simclr.projection_head_dim,\
+                config.dataloader.batch_size,\
+                    config.simclr.temperature,
+                config.trainer.num_gpus * config.trainer.num_nodes)
+        
     def forward(self, x):
         return self.encoder(x)
 
