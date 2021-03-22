@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File [36m"/usr/local/lib/python3.8/runpy.py"[39;49;00m, line [34m193[39;49;00m, in _run_module_as_main
+    [34mreturn[39;49;00m _run_code(code, main_globals, [34mNone[39;49;00m,
+  File [36m"/usr/local/lib/python3.8/runpy.py"[39;49;00m, line [34m86[39;49;00m, in _run_code
+    exec(code, run_globals)
+  File [36m"/tts_data/simclr/SABERv2/train.py"[39;49;00m, line [34m6[39;49;00m, in <module>
+    [34mfrom[39;49;00m [04m[36mbolts[39;49;00m[04m[36m.[39;49;00m[04m[36msimclr[39;49;00m [34mimport[39;49;00m SpeechSimClr
+  File [36m"/tts_data/simclr/SABERv2/bolts/simclr.py"[39;49;00m, line [34m7[39;49;00m, in <module>
+    [34mfrom[39;49;00m [04m[36mlosses[39;49;00m[04m[36m.[39;49;00m[04m[36mcontrastive_loss[39;49;00m [34mimport[39;49;00m *
+  File [36m"/tts_data/simclr/SABERv2/losses/contrastive_loss.py"[39;49;00m, line [34m74[39;49;00m
+    [36mself[39;49;00m.criterion = nn.CrossEntropyLoss(reduction=[33m"[39;49;00m[33mmean[39;49;00m[33m"[39;49;00m)
+                                                         ^
+[91mTabError[39;49;00m: inconsistent use of tabs and spaces in indentation

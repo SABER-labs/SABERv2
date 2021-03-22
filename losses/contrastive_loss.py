@@ -64,13 +64,14 @@ class BLN_loss(nn.Module):
         self.temperature = temperature
         self.world_size = world_size
 
-        self.positive_mask = self.mask_correlated_samples(batch_size, world_size)
+        positive_mask = self.mask_correlated_samples(batch_size, world_size)
         self.register_buffer("diagonal_mask", torch.zeros_like(positive_mask).fill_diagonal_(1).detach())
 
         N = 2 * self.batch_size * self.world_size
         self.register_buffer("labels", torch.masked_select(torch.arange(N).repeat(N, 1), positive_mask).long().detach())
 
         self.bln_similarity = nn.Linear(dim, dim, False)
+		self.criterion = nn.CrossEntropyLoss(reduction="mean")
     
     def mask_correlated_samples(self, batch_size, world_size):
         N = batch_size * world_size
@@ -89,7 +90,7 @@ class BLN_loss(nn.Module):
 
         z = torch.cat((z_i, z_j), dim=0)
 
-        sim = torch.matmul(self.bln_similarity(z), torch.transpose(z))/self.temperature
+        sim = torch.matmul(self.bln_similarity(z), torch.transpose(z,0,1))/self.temperature
 
         # zi-zi gets reduced by a large number to make it exponent to 0.
         sim = sim - (self.diagonal_mask * 1e9)

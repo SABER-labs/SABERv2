@@ -27,7 +27,7 @@ class SpeechSimClr(pl.LightningModule):
             )
         else:
             self.criterion = BLN_loss(\
-                config.simclr.projection_head_dim,\
+                config.simclr.final_embedding_dim,\
                 config.dataloader.batch_size,\
                     config.simclr.temperature,
                 config.trainer.num_gpus * config.trainer.num_nodes)
