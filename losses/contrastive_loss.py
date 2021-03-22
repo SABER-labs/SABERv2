@@ -63,6 +63,7 @@ class BLN_loss(nn.Module):
         self.batch_size = batch_size
         self.temperature = temperature
         self.world_size = world_size
+        self.criterion = nn.CrossEntropyLoss(reduction="mean")
 
         positive_mask = self.mask_correlated_samples(batch_size, world_size)
         self.register_buffer("diagonal_mask", torch.zeros_like(positive_mask).fill_diagonal_(1).detach())
