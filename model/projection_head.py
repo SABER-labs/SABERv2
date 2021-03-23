@@ -48,3 +48,20 @@ class SimSiamPrediction(nn.Module):
     def forward(self, x):
         x = self.model(x)
         return x
+
+
+class COLAProjection(nn.Module):
+
+    def __init__(self, hidden_dim=config.simclr.projection_head_dim, final_embedding_dim=config.simclr.final_embedding_dim):
+
+        super.__init__()
+
+        self.model = nn.Sequential(
+            nn.Linear(hidden_dim, final_embedding_dim), nn.LayerNorm(final_embedding_dim), nn.Tanh()
+        )
+
+    def forward(self, x):
+
+        x = torch.max(x, dim = 2)[0]
+        return self.model(x)
+
