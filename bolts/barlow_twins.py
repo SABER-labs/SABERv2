@@ -7,7 +7,7 @@ from losses.contrastive_loss import BarlowTwinsLoss
 from model.projection_head import BarlowTwinsProjection
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 
-class BawlowTwins(pl.LightningModule):
+class BarlowTwins(pl.LightningModule):
 
     def __init__(self, num_samples):
         super().__init__()

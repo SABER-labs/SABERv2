@@ -25,9 +25,9 @@ class BarlowTwinsProjection(nn.Module):
         super().__init__()
 
         self.model = nn.Sequential(
-            nn.Linear(in_dim, hid_dim), nn.BatchNorm1d(hid_dim), nn.Hardswish(inplace=True),
-            nn.Linear(hid_dim, hid_dim), nn.BatchNorm1d(hid_dim), nn.Hardswish(inplace=True),
-            nn.Linear(hid_dim, out_dim)
+            nn.Linear(in_dim, hid_dim, bias=False), nn.BatchNorm1d(hid_dim), nn.Hardswish(inplace=True),
+            nn.Linear(hid_dim, hid_dim, bias=False), nn.BatchNorm1d(hid_dim), nn.Hardswish(inplace=True),
+            nn.Linear(hid_dim, out_dim, bias=False)
         )
 
     def forward(self, x):
