@@ -72,7 +72,6 @@ class BLN_loss(nn.Module):
         self.register_buffer("labels", torch.masked_select(torch.arange(N).repeat(N, 1), positive_mask).long().detach())
 
         self.bln_similarity = nn.Linear(dim, dim, False)
-		self.criterion = nn.CrossEntropyLoss(reduction="mean")
     
     def mask_correlated_samples(self, batch_size, world_size):
         N = batch_size * world_size
