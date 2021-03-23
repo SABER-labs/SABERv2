@@ -72,3 +72,27 @@ class BarlowTwinsLoss(torch.nn.Module):
         off_diag = off_diagonal(c).pow_(2).sum().mul(self.scale_loss)
         loss = on_diag + self.lambda_param * off_diag
         return loss
+
+class AggregatedCrossEntropyLoss(torch.nn.Module):
+
+    def __init__(self, stride=1, gumbel_temperature=config.aggregated_ce.gumbel_temperature):
+        super().__init__()
+        self.gumbel_temperature = gumbel_temperature
+        self.stride = stride
+
+    def _get_lengths(self, lengths):
+        return lengths.div(self.stride).ceil_()
+
+    def forward(self, g_a: torch.Tensor, g_b: torch.Tensor, img1_len: torch.Tensor, img2_len: torch.Tensor):
+        quantized_g_a = F.gumbel_softmax(g_a, tau=self.gumbel_temperature, hard=True, dim=1)
+        quantized_g_b = F.gumbel_softmax(g_b, tau=self.gumbel_temperature, hard=True, dim=1)
+
+        C = g_a.size(1)
+
+        char_counts_ga = quantized_g_a.sum(dim=2)
+        char_counts_gb = quantized_g_b.sum(dim=2)
+
+        entropy_ga = (torch.softmax(g_a, dim=1) * torch.log_softmax(g_a, dim=1)).sum(dim=(1, 2)).div_(C * self._get_lengths(img1_len)).mean()
+        entropy_gb = (torch.softmax(g_b, dim=1) * torch.log_softmax(g_b, dim=1)).sum(dim=(1, 2)).div_(C * self._get_lengths(img2_len)).mean()
+
+        return (F.l1_loss(char_counts_ga, char_counts_gb),  entropy_ga + entropy_gb)

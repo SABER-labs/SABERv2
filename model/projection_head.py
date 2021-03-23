@@ -64,3 +64,17 @@ class SimSiamPrediction(nn.Module):
     def forward(self, x):
         x = self.model(x)
         return x
+
+class AggregatedProjection(nn.Module):
+
+    def __init__(self, in_dim=config.model.output_dim, hid_dim=config.aggregated_ce.projection_hid_dim, out_dim=config.aggregated_ce.n_characters):
+        super().__init__()
+
+        self.model = nn.Sequential(
+            nn.Conv1d(in_dim, hid_dim, 1, bias=False), nn.BatchNorm1d(hid_dim), nn.Hardswish(inplace=True),
+            nn.Conv1d(hid_dim, out_dim, 1, bias=False)
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        return x

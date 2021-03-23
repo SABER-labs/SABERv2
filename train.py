@@ -6,6 +6,7 @@ from bolts.unsupervised_data import UnsupervisedCommonVoiceDataModule
 from bolts.simclr import SpeechSimClr
 from bolts.siamsim import Simsiam
 from bolts.barlow_twins import BarlowTwins
+from bolts.aggregated_twin_strat import AggregatedEntropicTwins
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins import DDPPlugin, DDPShardedPlugin
 
@@ -16,6 +17,7 @@ ssl_datamodule.setup(stage='fit')
 # ssl = BarlowTwins(num_samples=ssl_datamodule.num_train_samples())
 # ssl = Simsiam(num_samples=ssl_datamodule.num_train_samples())
 ssl = SpeechSimClr(num_samples=ssl_datamodule.num_train_samples())
+# ssl = AggregatedEntropicTwins(num_samples=ssl_datamodule.num_train_samples())
 logger = TensorBoardLogger(os.path.join(
     config.trainer.default_root_dir, config.trainer.tensorboard_logdir), name='ssl')
 

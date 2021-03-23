@@ -80,3 +80,10 @@ projection_hid_dim = 8192
 projection_out_dim = 8192
 scale_loss = 0.024
 lambda_param = 0.0051
+
+[aggregated_ce]
+projection_hid_dim = 1024
+n_characters = 512
+lambda_aggregated_loss = 2.0
+scale_entropy = 0.1
+gumbel_temperature = 0.5
