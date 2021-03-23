@@ -6,7 +6,7 @@ from utils.config import config
 from utils.training_utils import length_to_mask
 from losses.contrastive_loss import *
 import torch.nn.functional as F
-from model.projection_head import Projection
+from model.projection_head import *
 from pl_bolts.optimizers.lars_scheduling import LARSWrapper
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 
@@ -16,7 +16,7 @@ class SpeechSimClr(pl.LightningModule):
         super().__init__()
         self.encoder = QuartzNet(n_mels=config.audio.n_mels)
         self.steps_per_epoch = (num_samples // (config.dataloader.batch_size * config.trainer.num_gpus * config.trainer.num_nodes)) + 1
-        self.projection = Projection()
+        self.projection = COLAProjection()
         self.model_stride = self.encoder.model_stride() 
         if similarity == "cosine":
             self.criterion = NT_Xent(
