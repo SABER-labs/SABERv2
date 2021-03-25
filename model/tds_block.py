@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from utils.config import config
+
 class TDSBlock(nn.Module):
 
     def __init__(self, channels, kernel_size, width, dropout , inner_linearDim, right_padding, time_dim=0):
@@ -14,11 +16,11 @@ class TDSBlock(nn.Module):
         if right_padding != -1:
             self.total_padding = kernel_size - 1
 
-            assert self.total_padding < right_padding, "right padding exceeds the 'SAME' padding required for TDSBlock"
+            assert self.total_padding > right_padding, "right padding exceeds the 'SAME' padding required for TDSBlock"
             conv_padding = 0
         
         self.conv_padding = torch.nn.ConstantPad2d((self.total_padding-right_padding, right_padding, 0, 0), 0)
-        self.conv_layer = torch.nn.Conv2d(channels, channels, (kernel_size,1), 1, (0, conv_padding))   
+        self.conv_layer = torch.nn.Conv2d(channels, channels, (1,kernel_size), 1, (0, conv_padding))   
 
         assert dropout >= 0, "dropout cannot be less than 0"
 
@@ -47,16 +49,15 @@ class TDSBlock(nn.Module):
         out = self.conv_layer(out)
         out = torch.relu(out)
         out = self.dropout_conv(out)
-
         out = out + x
         if self.time_dim == 0:
-            out = out.permute(0, 3, 2, 1)
-            out = self.conv_layerN(x)
-            x = out.permute(0, 3, 2, 1)
+            out = out.permute(0, 3, 1, 2)
+            out = self.conv_layerN(out)
+            x = out.permute(0, 2, 3, 1)
         else:
-            x = self.conv_layerN(x)
-
-        out = x.view((-1, self.time_dim, 1, self.linear_dim))
+            x = self.conv_layerN(out)
+        out = x.permute(0, 3, 1, 2)       
+        out = out.view((out.shape[0], out.shape[1], 1, self.linear_dim))
         out = self.linear1(out)
         out = torch.relu(out)
         out = self.dropout1(out)
@@ -64,16 +65,16 @@ class TDSBlock(nn.Module):
         out = self.linear2(out)
         out = torch.relu(out)
         out = self.dropout2(out)
-        out = out.permute((0, 3, 2, 1))
-        out = out.view((-1, self.channels, self.width, self.time_dim))
+        out = out.permute((0, 2, 3, 1))
+        out = out.view((-1, self.channels, self.width, out.shape[3]))
 
         out = out + x
         if self.time_dim == 0:
-            out = out.permute(0, 3, 2, 1)
-            out = self.linear_layerN(x)
-            out = out.permute(0, 3, 2, 1)
+            out = out.permute(0, 3, 1, 2)
+            out = self.linear_layerN(out)
+            out = out.permute(0, 2, 3, 1)
         else:
-            out = self.linear_layerN(x)
+            out = self.linear_layerN(out)
 
         return out
 
