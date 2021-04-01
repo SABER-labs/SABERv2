@@ -65,3 +65,15 @@ class COLAProjection(nn.Module):
         x = torch.max(x, dim = 2)[0]
         return self.model(x)
 
+class SupervisedHead(nn.Module):
+
+    def __init__(self, hidden_dim=config.simclr.projection_head_dim, final_embedding_dim=config.supervised_train.n_classes):
+
+        self.model = nn.Sequential(
+            nn.Linear(hidden_dim, final_embedding_dim), nn.LayerNorm(final_embedding_dim), nn.ReLU()
+        )
+
+    def forward(self, x):
+
+        x = x.permute(0, 2, 1)
+        return self.model(x)

@@ -1,5 +1,9 @@
 title = "SABER Configurations"
 
+[task]
+training_mode = "supervised" 
+# unsupervised
+
 [dataset]
 # root = "/media/vigi99/ssd_1tb/AudioData/cv-corpus-6.1-2020-12-11/en"
 # test_root = "/media/vigi99/ssd_1tb/AudioData/simclr_test"
@@ -19,6 +23,7 @@ min_audio_in_s = 2.0
 default_root_dir = "/tts_data/SABERV2/training_artifacts"
 tensorboard_logdir = "tb_logs"
 savewieghts_dir = "weights"
+supervised_weights_dir = "sup_weights"
 max_epochs = 150
 num_gpus = 3
 num_nodes = 1
@@ -31,6 +36,7 @@ final_lr = 1e-4
 learning_rate = 1e-3
 warmup_epochs = 4.5
 weight_decay = 1e-6
+
 
 [dataloader]
 batch_size = 48
@@ -64,6 +70,7 @@ snr_range = [3, 20]
 [model]
 output_dim = 1024
 similarity = "bilinear"
+# cosine
 
 [simclr]
 projection_head_dim = 1024
@@ -75,3 +82,9 @@ margin = 0.35
 projection_hid_dim = 2048
 prediction_hid_dim = 512
 prediction_out_dim = 2048
+
+
+[supervised_train]
+language_modelpath= "/dev/shm/cv-corpus-6.1-2020-12-11/en/uni.model"
+encoder_weights_path = "/tts_data/simclr/SABERV2/training_artifacts/weights/epoch=31-step=241183.ckpt"
+nclasses = 512

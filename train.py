@@ -3,49 +3,100 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from utils.config import config
 from bolts.unsupervised_data import UnsupervisedCommonVoiceDataModule
+from bolts.supervised_data import SupervisedCommonVoiceDataModule
+from bolts.supervised_train import SupervisedTask
 from bolts.simclr import SpeechSimClr
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins import DDPPlugin, DDPShardedPlugin
 
-simclr_datamodule = UnsupervisedCommonVoiceDataModule()
-simclr_datamodule.prepare_data()
-simclr_datamodule.setup(stage='fit')
+if config.task.training_mode == "unsupervised":
+    simclr_datamodule = UnsupervisedCommonVoiceDataModule()
+    simclr_datamodule.prepare_data()
+    simclr_datamodule.setup(stage='fit')
 
-simclr = SpeechSimClr(num_samples=simclr_datamodule.num_train_samples(), similarity=config.model.similarity)
-logger = TensorBoardLogger(os.path.join(
-    config.trainer.default_root_dir, config.trainer.tensorboard_logdir), name='simclr')
+    simclr = SpeechSimClr(num_samples=simclr_datamodule.num_train_samples(), similarity=config.model.similarity)
+    logger = TensorBoardLogger(os.path.join(
+        config.trainer.default_root_dir, config.trainer.tensorboard_logdir), name='simclr')
 
-model_checkpoint = ModelCheckpoint(
-    dirpath=os.path.join(config.trainer.default_root_dir,
-                         config.trainer.savewieghts_dir),
-    save_last=True,
-    save_top_k=1,
-    monitor='train_loss'
-)
-lr_monitor = LearningRateMonitor(logging_interval='step')
-callbacks = [model_checkpoint, lr_monitor]
+    model_checkpoint = ModelCheckpoint(
+        dirpath=os.path.join(config.trainer.default_root_dir,
+                            config.trainer.savewieghts_dir),
+        save_last=True,
+        save_top_k=1,
+        monitor='train_loss'
+    )
+    lr_monitor = LearningRateMonitor(logging_interval='step')
+    callbacks = [model_checkpoint, lr_monitor]
 
-trainer = pl.Trainer(
-    default_root_dir=config.trainer.default_root_dir,
-    gpus=config.trainer.num_gpus,
-    max_epochs=config.trainer.max_epochs,
-    accelerator='ddp' if config.trainer.num_gpus > 1 else None,
-    plugins=DDPPlugin(find_unused_parameters=False, sync_batchnorm=True) if config.trainer.num_gpus > 1 else None,
-    num_nodes=config.trainer.num_nodes,
-    log_every_n_steps=config.trainer.log_every_n_steps,
-    gradient_clip_val=config.trainer.gradient_clip_val,
-    precision=config.trainer.precision,
-    callbacks=callbacks,
-    fast_dev_run=config.trainer.fast_dev_run,
-    logger=logger,
-    terminate_on_nan=True,
-    sync_batchnorm=True if config.trainer.num_gpus > 1 else False,
-    # overfit_batches=0.05,
-    # track_grad_norm=2,
-    # overfit_batches=0.01,
-    # profiler=True
-    # weights_summary='full'
-    # resume_from_checkpoint=os.path.join(config.trainer.default_root_dir, config.trainer.savewieghts_dir)
-)
+    trainer = pl.Trainer(
+        default_root_dir=config.trainer.default_root_dir,
+        gpus=config.trainer.num_gpus,
+        max_epochs=config.trainer.max_epochs,
+        accelerator='ddp' if config.trainer.num_gpus > 1 else None,
+        plugins=DDPPlugin(find_unused_parameters=False, sync_batchnorm=True) if config.trainer.num_gpus > 1 else None,
+        num_nodes=config.trainer.num_nodes,
+        log_every_n_steps=config.trainer.log_every_n_steps,
+        gradient_clip_val=config.trainer.gradient_clip_val,
+        precision=config.trainer.precision,
+        callbacks=callbacks,
+        fast_dev_run=config.trainer.fast_dev_run,
+        logger=logger,
+        terminate_on_nan=True,
+        sync_batchnorm=True if config.trainer.num_gpus > 1 else False,
+        # overfit_batches=0.05,
+        # track_grad_norm=2,
+        # overfit_batches=0.01,
+        # profiler=True
+        # weights_summary='full'
+        # resume_from_checkpoint=os.path.join(config.trainer.default_root_dir, config.trainer.savewieghts_dir)
+    )
 
-trainer.fit(simclr, datamodule=simclr_datamodule)
+    trainer.fit(simclr, datamodule=simclr_datamodule)
+
+if config.task.training_mode == "supervised":
+
+    supervised_datamodule = SupervisedCommonVoiceDataModule()
+
+    supervised_datamodule.prepare_data()
+    supervised_datamodule.setup(stage='fit')
+
+    model = SupervisedTask(num_samples=simclr_datamodule.num_train_samples())
+    logger = TensorBoardLogger(os.path.join(
+        config.trainer.default_root_dir, config.trainer.tensorboard_logdir), name='supervised')
+
+    model_checkpoint = ModelCheckpoint(
+        dirpath=os.path.join(config.trainer.default_root_dir,
+                            config.trainer.supervised_weights_dir),
+        save_last=True,
+        save_top_k=1,
+        monitor='val_loss'
+    )
+
+    lr_monitor = LearningRateMonitor(logging_interval='step')
+    callbacks = [model_checkpoint, lr_monitor]
+
+
+    trainer = pl.Trainer(
+        default_root_dir=config.trainer.default_root_dir,
+        gpus=config.trainer.num_gpus,
+        max_epochs=config.trainer.max_epochs,
+        accelerator='ddp' if config.trainer.num_gpus > 1 else None,
+        plugins=DDPPlugin(find_unused_parameters=False, sync_batchnorm=True) if config.trainer.num_gpus > 1 else None,
+        num_nodes=config.trainer.num_nodes,
+        log_every_n_steps=config.trainer.log_every_n_steps,
+        gradient_clip_val=config.trainer.gradient_clip_val,
+        precision=config.trainer.precision,
+        callbacks=callbacks,
+        fast_dev_run=config.trainer.fast_dev_run,
+        logger=logger,
+        terminate_on_nan=True,
+        sync_batchnorm=True if config.trainer.num_gpus > 1 else False,
+        # overfit_batches=0.05,
+        # track_grad_norm=2,
+        # overfit_batches=0.01,
+        # profiler=True
+        # weights_summary='full'
+        # resume_from_checkpoint=os.path.join(config.trainer.default_root_dir, config.trainer.savewieghts_dir)
+    )
+
+    

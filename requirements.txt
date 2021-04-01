@@ -13,3 +13,5 @@ sklearn
 #torchaudio==0.8.0
 git+https://github.com/PytorchLightning/lightning-bolts.git@master
 pytorch-lightning==1.2.3
+sentencepiece
+jiwer
