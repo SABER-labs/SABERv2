@@ -54,7 +54,7 @@ class COLAProjection(nn.Module):
 
     def __init__(self, hidden_dim=config.simclr.projection_head_dim, final_embedding_dim=config.simclr.final_embedding_dim):
 
-        super.__init__()
+        super().__init__()
 
         self.model = nn.Sequential(
             nn.Linear(hidden_dim, final_embedding_dim), nn.LayerNorm(final_embedding_dim), nn.Tanh()
@@ -68,7 +68,8 @@ class COLAProjection(nn.Module):
 class SupervisedHead(nn.Module):
 
     def __init__(self, hidden_dim=config.simclr.projection_head_dim, final_embedding_dim=config.supervised_train.n_classes):
-
+        
+        super().__init__()
         self.model = nn.Sequential(
             nn.Linear(hidden_dim, final_embedding_dim), nn.LayerNorm(final_embedding_dim), nn.ReLU()
         )
