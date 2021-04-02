@@ -26,7 +26,7 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
     def setup(self, stage: Optional[str] = None):
 
             self.supervised = torchaudio.datasets.COMMONVOICE(
-                root=config.dataset.root, tsv=config.dataset.supervised)
+                root=config.dataset.root, tsv=config.dataset.supervised_train)
             self.transform = self.mel_then_specaug
             self.augmentation = self.sox_augmentations
             size = self.supervised.__len__()
