@@ -60,7 +60,7 @@ if config.task.training_mode == "supervised":
     supervised_datamodule.prepare_data()
     supervised_datamodule.setup(stage='fit')
 
-    model = SupervisedTask(num_samples=simclr_datamodule.num_train_samples())
+    model = SupervisedTask(num_samples=supervised_datamodule.num_train_samples())
     logger = TensorBoardLogger(os.path.join(
         config.trainer.default_root_dir, config.trainer.tensorboard_logdir), name='supervised')
 

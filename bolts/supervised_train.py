@@ -11,7 +11,6 @@ from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from jiwer import wer
 import sentencepiece as spm
 
-
 class SupervisedTask(pl.LightningModule):
 
     def __init__(self, num_samples):
@@ -49,8 +48,8 @@ class SupervisedTask(pl.LightningModule):
         loss = self.criterion(h, target, img1_len, target_len)
         self.log('val_loss', loss, on_step=True, on_epoch=False)
         h = torch.argmax(h.permute(1, 0, 2), 2)
-        h = h.cpu().detach().numpy()
-        target = target.cpu().detach().numpy()
+        h = h.detach().cpu().numpy()
+        target = target.detach().cpu().numpy()
 
         ref = self.tokenizer.decode(h)
         pred = self.tokenizer.decode(target)
