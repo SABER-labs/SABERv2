@@ -82,9 +82,11 @@ class SupervisedTask(pl.LightningModule):
         model_state_dict = self.encoder.state_dict()
 
         final_dict = dict()
-        for k in state_dict:
-            if k in model_state_dict and state_dict[k].shape == model_state_dict[k].shape:                
-                final_dict[k] = state_dict[k]
+        encoder_name = "encoder."
+        for k in model_state_dict:
+            model_key = encoder_name + k
+            if model_key in state_dict and state_dict[model_key].shape == model_state_dict[k].shape:                
+                final_dict[k] = state_dict[model_key]
 
         self.encoder.load_state_dict(final_dict)
 
