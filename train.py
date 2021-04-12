@@ -23,7 +23,7 @@ if config.task.training_mode == "unsupervised":
                             config.trainer.savewieghts_dir),
         save_last=True,
         save_top_k=1,
-        monitor='train_loss'
+        monitor='avg_val_loss'
     )
     lr_monitor = LearningRateMonitor(logging_interval='step')
     callbacks = [model_checkpoint, lr_monitor]
@@ -69,7 +69,7 @@ if config.task.training_mode == "supervised":
                             config.trainer.supervised_weights_dir),
         save_last=True,
         save_top_k=1,
-        monitor='val_loss'
+        monitor='avg_val_loss'
     )
 
     lr_monitor = LearningRateMonitor(logging_interval='step')
@@ -98,5 +98,5 @@ if config.task.training_mode == "supervised":
         # weights_summary='full'
         # resume_from_checkpoint=os.path.join(config.trainer.default_root_dir, config.trainer.savewieghts_dir)
     )
-
+    trainer.fit(model, datamodule=supervised_datamodule)
     

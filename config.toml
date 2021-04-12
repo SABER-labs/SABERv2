@@ -25,15 +25,15 @@ tensorboard_logdir = "tb_logs"
 savewieghts_dir = "weights"
 supervised_weights_dir = "sup_weights"
 max_epochs = 150
-num_gpus = 3
+num_gpus = 1
 num_nodes = 1
 precision = 32
 log_every_n_steps = 50
-gradient_clip_val = 0.0
+gradient_clip_val = 0.1
 fast_dev_run = false
 start_lr = 5e-4
 final_lr = 1e-4
-learning_rate = 1e-3
+learning_rate = 1e-4
 warmup_epochs = 2
 weight_decay = 1e-6
 
@@ -85,6 +85,7 @@ prediction_out_dim = 2048
 
 
 [supervised_train]
-language_modelpath= "/dev/shm/cv-corpus-6.1-2020-12-11/en/uni.model"
+language_modelpath= "/dev/shm/cv-corpus-6.1-2020-12-11/en/uni"
+corpus = "/dev/shm/cv-corpus-6.1-2020-12-11/en/sentences.txt"
 encoder_weights_path = "/tts_data/simclr/SABERV2/training_artifacts/weights/epoch=31-step=241183.ckpt"
 nclasses = 512

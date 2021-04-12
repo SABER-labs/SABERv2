@@ -20,9 +20,25 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
         self.no_augmentation = NoSoxAugmentations(config.dataset.sample_rate)
         self.mel_then_specaug = torch.jit.script(torch.nn.Sequential(ToMelSpec(), SpecAug()))
         self.only_mel = torch.jit.script(torch.nn.Sequential(ToMelSpec()))
-        spe = spm.SentencePieceProcessor()
-        self.tokenizer = spe.load(config.supervised_train.language_modelpath)
+        self.pad = 0
+        self.unk = 1
+        self.eos = 2
+        self.bos = 3
 
+    def prepare_data(self):
+        train_cmd = '--input={input} --model_prefix={prefix} --vocab_size={sz}\
+         --max_sentencepiece_length=3 --character_coverage=1.0 --model_type=unigram\
+          --hard_vocab_limit=false --split_by_unicode_script=false\
+           --pad_id={pad} --unk_id={unk} --bos_id={bos} --eos_id={eos} \
+           --pad_piece=[PAD] --unk_piece=[UNK] --bos_piece=[BOS] --eos_piece=[EOS]'.format(
+            input=config.supervised_train.corpus, prefix=config.supervised_train.language_modelpath,\
+             sz=config.supervised_train.nclasses, pad=self.pad, unk=self.unk, bos=self.bos, eos=self.eos
+        )
+
+        spm.SentencePieceTrainer.Train(train_cmd)
+        
+        # print ("file_name", f)
+        
     def setup(self, stage: Optional[str] = None):
 
             self.supervised = torchaudio.datasets.COMMONVOICE(
@@ -31,6 +47,9 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
             self.augmentation = self.sox_augmentations
             size = self.supervised.__len__()
             self.train, self.val = random_split(self.supervised, [int(0.9 * size), size - int(0.9*size)])
+            f = config.supervised_train.language_modelpath+".model"
+            self.tokenizer = spm.SentencePieceProcessor(model_file=f)
+            
 
 
     def train_dataloader(self):
@@ -51,7 +70,7 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
             num_workers=config.dataloader.num_workers,
             pin_memory=True,
             drop_last=True,
-            shuffle=True,
+            # shuffle=True,
             collate_fn=self._collate_fn
         )
 
@@ -63,27 +82,25 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
     def on_after_batch_transfer(self, batch, dataloader_idx):
         input_a, input_a_lengths, target, target_lengths = batch
         input_a = self.transform(input_a)
-        input_a_lengths = (input_a_lengths / (config.audio.model_sample_rate/1000 * config.audio.stride_in_ms)).ceil_()
+        input_a_lengths = (input_a_lengths / (config.audio.model_sample_rate/1000 * 2*config.audio.stride_in_ms)).ceil_().int()
         return (input_a, input_a_lengths, target, target_lengths)
 
     def num_train_samples(self):
         return len(self.supervised)
-
     
     def _collate_fn(self, batch):
-
         raw_inputs = [b[0] for b in batch if b]
         input_a = [self.augmentation(raw_input).transpose(1, 0) for raw_input in raw_inputs]
-        target_sentences = torch.tensor([self.tokenizer.encode(b[2]['sentence'], out_type=int) for b in batch if b], \
-            dtype=torch.int32, device=input_a[0].device)
+        target_sentences = [torch.tensor(self.tokenizer.encode(b[2]['sentence']), \
+        dtype=torch.int32, device=input_a[0].device) for b in batch if b]
         input_a_lengths = torch.tensor(
-            [t.size(0) for t in input_a],
+            [x.shape[0] for x in input_a],
             dtype=torch.int32,
             device=input_a[0].device,
         )
         input_a = torch.nn.utils.rnn.pad_sequence(input_a, batch_first=True).transpose(1, -1).squeeze(1)
         target_lengths = torch.tensor([len(x) for x in target_sentences], dtype=torch.int32, device=input_a[0].device)
-
+        target_sentences = torch.nn.utils.rnn.pad_sequence(target_sentences, True, self.pad)
         return (input_a, input_a_lengths, target_sentences, target_lengths)
 
 if __name__ == "__main__":

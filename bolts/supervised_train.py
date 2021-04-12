@@ -19,9 +19,8 @@ class SupervisedTask(pl.LightningModule):
         self.steps_per_epoch = (num_samples // (config.dataloader.batch_size * config.trainer.num_gpus * config.trainer.num_nodes)) + 1
         self.projection = SupervisedHead()
         self.model_stride = self.encoder.model_stride() 
-        self.criterion = torch.nn.CTCLoss()
-        spe = spm.SentencePieceProcessor()
-        self.tokenizer = spe.load(config.supervised_train.language_modelpath)
+        self.criterion = torch.nn.CTCLoss(zero_infinity=True)
+        self.tokenizer = spm.SentencePieceProcessor(model_file=config.supervised_train.language_modelpath+".model")
         self.load_encoder_params(config.supervised_train.encoder_weights_path)
 
     def forward(self, x):
@@ -46,19 +45,27 @@ class SupervisedTask(pl.LightningModule):
         h = self(img1)
         h = h.permute(1, 0, 2)
         loss = self.criterion(h, target, img1_len, target_len)
-        self.log('val_loss', loss, on_step=True, on_epoch=False)
-        h = torch.argmax(h.permute(1, 0, 2), 2)
-        h = h.detach().cpu().numpy()
-        target = target.detach().cpu().numpy()
-
-        ref = self.tokenizer.decode(h)
-        pred = self.tokenizer.decode(target)
-
-        error = wer(ref, pred)
-        self.log("wer", error, on_step=True, on_epoch=False)
-
-        return loss
         
+        # self.log('val_loss', loss, on_step=True, on_epoch=False)
+        # print ('val_loss', loss)
+        h = torch.argmax(h.permute(1, 0, 2), 2)
+        h = h.detach().cpu().numpy().tolist()
+        target = target.detach().cpu().numpy().tolist()
+
+        pred = self.tokenizer.decode(h)
+        ref = self.tokenizer.decode(target)
+        error = wer(ref, pred)
+        result = {'val_loss': loss, 'wer':error}
+        return result
+        
+    def validation_epoch_end(self, output):
+        # result = pl.EvalResult(checkpoint_on=output['valid_loss'].mean())
+        # print(torch.stack([x['val_loss'] for x in output]).mean())
+        avg_val_loss = torch.stack([x['val_loss'] for x in output]).mean()
+        error = [x['wer'] for x in output]
+        avg_error = sum(error)/len(error)
+        self.log('avg_val_loss', avg_val_loss, logger=True)
+        self.log('wer', avg_error)
 
     def get_progress_bar_dict(self):
         items = super().get_progress_bar_dict()
@@ -78,7 +85,7 @@ class SupervisedTask(pl.LightningModule):
         return [optimizer], [{'scheduler': scheduler, 'interval': 'step'}]
 
     def load_encoder_params(self, path):
-        state_dict = torch.load(path)
+        state_dict = torch.load(path)['state_dict']
         model_state_dict = self.encoder.state_dict()
 
         final_dict = dict()
