@@ -10,13 +10,16 @@ from dataset.test_dataset import SimClrTestDataset
 import time
 from pytorch_lightning.utilities import move_data_to_device
 
+
 class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
 
     def __init__(self):
         super().__init__()
-        self.sox_augmentations = RandomSoxAugmentations(config.dataset.sample_rate)
+        self.sox_augmentations = RandomSoxAugmentations(
+            config.dataset.sample_rate)
         self.no_augmentation = NoSoxAugmentations(config.dataset.sample_rate)
-        self.mel_then_specaug = torch.jit.script(torch.nn.Sequential(ToMelSpec(), SpecAug()))
+        self.mel_then_specaug = torch.jit.script(
+            torch.nn.Sequential(ToMelSpec(), SpecAug()))
         self.only_mel = torch.jit.script(torch.nn.Sequential(ToMelSpec()))
 
     def setup(self, stage: Optional[str] = None):
@@ -30,7 +33,6 @@ class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
                 root=config.dataset.root, tsv=config.dataset.unsupervised_train)
             self.transform = self.mel_then_specaug
             self.augmentation = self.sox_augmentations
-
 
     def num_train_samples(self):
         return len(self.unsupervised_dataset)
@@ -68,8 +70,10 @@ class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
         input_a, input_b, input_a_lengths, input_b_lengths = batch
         input_a = self.transform(input_a)
         input_b = self.transform(input_b)
-        input_a_lengths = (input_a_lengths / (config.audio.model_sample_rate/1000 * config.audio.stride_in_ms)).ceil_()
-        input_b_lengths = (input_b_lengths / (config.audio.model_sample_rate/1000 * config.audio.stride_in_ms)).ceil_()
+        input_a_lengths = (input_a_lengths / (config.audio.model_sample_rate /
+                           1000 * config.audio.stride_in_ms)).ceil_()
+        input_b_lengths = (input_b_lengths / (config.audio.model_sample_rate /
+                           1000 * config.audio.stride_in_ms)).ceil_()
         return (input_a, input_b, input_a_lengths, input_b_lengths)
 
     # input: batch -> (waveform, sample_rate, dictionary)
@@ -77,8 +81,10 @@ class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
     def _collate_fn(self, batch):
 
         raw_inputs = [b[0] for b in batch if b]
-        input_a = [self.augmentation(raw_input).transpose(1, 0) for raw_input in raw_inputs]
-        input_b = [self.augmentation(raw_input).transpose(1, 0) for raw_input in raw_inputs]
+        input_a = [self.augmentation(raw_input).transpose(1, 0)
+                   for raw_input in raw_inputs]
+        input_b = [self.augmentation(raw_input).transpose(1, 0)
+                   for raw_input in raw_inputs]
 
         input_a_lengths = torch.tensor(
             [t.size(0) for t in input_a],
@@ -91,10 +97,13 @@ class UnsupervisedCommonVoiceDataModule(pl.LightningDataModule):
             device=input_b[0].device,
         )
 
-        input_a = torch.nn.utils.rnn.pad_sequence(input_a, batch_first=True).transpose(1, -1).squeeze(1)
-        input_b = torch.nn.utils.rnn.pad_sequence(input_b, batch_first=True).transpose(1, -1).squeeze(1)
+        input_a = torch.nn.utils.rnn.pad_sequence(
+            input_a, batch_first=True).transpose(1, -1).squeeze(1)
+        input_b = torch.nn.utils.rnn.pad_sequence(
+            input_b, batch_first=True).transpose(1, -1).squeeze(1)
 
         return (input_a, input_b, input_a_lengths, input_b_lengths)
+
 
 if __name__ == "__main__":
     loader = UnsupervisedCommonVoiceDataModule()
@@ -103,4 +112,3 @@ if __name__ == "__main__":
         print(batch[0].shape, batch[1].shape, batch[2], batch[3])
         if i > 0 and i % 20 == 0:
             break
-        

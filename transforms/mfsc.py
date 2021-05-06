@@ -4,6 +4,7 @@ import torchaudio
 from utils.config import config
 import os
 
+
 class ToMelSpec(torch.nn.Module):
 
     def __init__(self, input_sample_rate: int = config.audio.model_sample_rate):
@@ -44,15 +45,19 @@ class SpecAug(torch.nn.Module):
     def forward(self, sample: torch.Tensor) -> torch.Tensor:
         return self.spec_aug(sample)
 
+
 if __name__ == "__main__":
     import time
     import math
     # waveform, samplerate = torchaudio.load(os.path.join(config.dataset.root, "clips", "common_voice_en_572372.mp3"))
-    waveform, samplerate = torchaudio.load(os.path.join(config.dataset.root, "clips", "common_voice_en_17970627.mp3"))
-    augmention = torch.jit.script(torch.nn.Sequential(ToMelSpec(samplerate), SpecAug(samplerate))).cuda()
+    waveform, samplerate = torchaudio.load(os.path.join(
+        config.dataset.root, "clips", "common_voice_en_17970627.mp3"))
+    augmention = torch.jit.script(torch.nn.Sequential(
+        ToMelSpec(samplerate), SpecAug(samplerate))).cuda()
     for i in range(100):
         start = time.process_time()
         augmented_waveform = augmention(waveform.cuda()).squeeze(0)
-        calculated_shape = math.ceil(waveform.size(1) / (samplerate/1000 * config.audio.stride_in_ms))
+        calculated_shape = math.ceil(waveform.size(
+            1) / (samplerate/1000 * config.audio.stride_in_ms))
         print(f"time taken for augmentation: {(time.process_time() - start) * 1000}ms, \
             augmented shape: {augmented_waveform.shape}, calculated shape: {calculated_shape}")

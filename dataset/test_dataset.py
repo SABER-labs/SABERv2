@@ -10,8 +10,8 @@ import torchaudio
 
 
 def load_audio(line: List[str],
-                          header: List[str],
-                          path: str) -> Tuple[Tensor, int, Dict[str, str]]:
+               header: List[str],
+               path: str) -> Tuple[Tensor, int, Dict[str, str]]:
     # Each line as the following data:
     # client_id, path, sentence, up_votes, down_votes, age, gender, accent
     assert header[1] == "path"
@@ -19,6 +19,7 @@ def load_audio(line: List[str],
     waveform, sample_rate = torchaudio.load(filename)
     dic = dict(zip(header, line))
     return waveform, sample_rate, dic
+
 
 class SimClrTestDataset(Dataset):
     def __init__(self,
@@ -39,9 +40,11 @@ class SimClrTestDataset(Dataset):
     def __len__(self) -> int:
         return len(self._walker)
 
+
 if __name__ == "__main__":
     from utils.config import config
-    loader = SimClrTestDataset(root=config.dataset.test_root, tsv=config.dataset.test)
+    loader = SimClrTestDataset(
+        root=config.dataset.test_root, tsv=config.dataset.test)
     for i in range(len(loader)):
         example = loader[i]
         print(example[0].shape, example[1], example[2])

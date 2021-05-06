@@ -2,6 +2,8 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 from model.tds_block import TDSBlock
+
+
 class Streaming_convnets(nn.Module):
 
     def __init__(self, dropout, n_mels, input_channels):
@@ -10,14 +12,14 @@ class Streaming_convnets(nn.Module):
 
         self.width = n_mels
 
-        self.pd1 = nn.ConstantPad2d((5,3, 0, 0),0)
+        self.pd1 = nn.ConstantPad2d((5, 3, 0, 0), 0)
         self.c1 = nn.Conv2d(input_channels, 15, (1, 10), (1, 2))
         self.dropout1 = nn.Dropout(dropout)
-        
+
         self.tds1 = TDSBlock(15, 9, n_mels, 0.1, 0, 1, 0)
         self.tds2 = TDSBlock(15, 9, n_mels, 0.1, 0, 1, 0)
 
-        self.pd2 = nn.ConstantPad2d((7,1, 0, 0),0)
+        self.pd2 = nn.ConstantPad2d((7, 1, 0, 0), 0)
         self.c2 = nn.Conv2d(15, 19, (1, 10), (1, 2))
         self.dropout2 = nn.Dropout(dropout)
 
@@ -25,7 +27,7 @@ class Streaming_convnets(nn.Module):
         self.tds4 = TDSBlock(19, 9, n_mels, 0.1, 0, 1, 0)
         self.tds5 = TDSBlock(19, 9, n_mels, 0.1, 0, 1, 0)
 
-        self.pd3 = nn.ConstantPad2d((9,1, 0, 0),0)
+        self.pd3 = nn.ConstantPad2d((9, 1, 0, 0), 0)
         self.c3 = nn.Conv2d(19, 23, (1, 12), (1, 2))
         self.dropout3 = nn.Dropout(dropout)
 
@@ -34,7 +36,7 @@ class Streaming_convnets(nn.Module):
         self.tds8 = TDSBlock(23, 11, n_mels, 0.1, 0, 1, 0)
         self.tds9 = TDSBlock(23, 11, n_mels, 0.1, 0, 1, 0)
 
-        self.pd4 = nn.ConstantPad2d((10, 0, 0, 0),0)
+        self.pd4 = nn.ConstantPad2d((10, 0, 0, 0), 0)
         self.c4 = nn.Conv2d(23, 27, (1, 11), (1, 1))
         self.dropout4 = nn.Dropout(dropout)
 
@@ -43,7 +45,6 @@ class Streaming_convnets(nn.Module):
         self.tds12 = TDSBlock(27, 11, n_mels, 0.1, 0, 0, 0)
         self.tds13 = TDSBlock(27, 11, n_mels, 0.1, 0, 0, 0)
         self.tds14 = TDSBlock(27, 11, n_mels, 0.1, 0, 0, 0)
-
 
     def forward(self, x):
 
@@ -103,14 +104,5 @@ class Streaming_convnets(nn.Module):
 
         x = x.permute(0, 3, 1, 2)
         x = x.view(-1, x.shape[1], 1, self.width*27)
-         
+
         return x
-
-
-
-
-
-
-
-
-    
