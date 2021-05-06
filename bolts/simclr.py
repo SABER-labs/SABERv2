@@ -64,6 +64,8 @@ class SpeechSimClr(pl.LightningModule):
         self.print(f"Sentence positive 3 - mohit x souvik = {scores[4][5]}")
         self.print(f"Easy Negative 1 - mohit x souvik = {scores[3][5]}")
         self.print(f"Easy Negative 2 - arjun x souvik = {scores[0][5]}")
+        self.print(f"Easy Negative 3 - mohit x arjun = {scores[3][2]}")
+        self.print(f"Easy Negative 4 - arjun x mohit = {scores[0][4]}")
         self.print(f"Sentence hard negative 1 - arjun x arjun = {scores[1][2]}")
         self.print(f"Sentence hard negative 2 - arjun x mohit = {scores[1][4]}")
         self.print(f"Sentence hard negative 3 - arjun x souvik = {scores[1][5]}")

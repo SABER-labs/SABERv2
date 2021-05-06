@@ -4,3 +4,4 @@ __pycache__/
 rsync.sh
 exclude.txt
 notebooks/
+debug/
