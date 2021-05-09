@@ -15,26 +15,26 @@ class TDSBlock(nn.Module):
         assert(right_padding >= 0)
 
         self.conv_block = nn.Sequential(
-            torch.nn.ConstantPad2d(
+            nn.ConstantPad2d(
                         (kernel_size - 1 - right_padding, right_padding, 0, 0), 0),
-            torch.nn.Conv2d(
+            nn.Conv2d(
                         channels, channels, (1, kernel_size), 1, (0, 0)),
             nn.ReLU(inplace=True),
-            torch.nn.Dropout(dropout)
+            nn.Dropout(dropout)
         )
 
         linear_dim = channels * width
 
         self.linear_block = nn.Sequential(
-            torch.nn.Linear(linear_dim, linear_dim),
+            nn.Linear(linear_dim, linear_dim),
             nn.ReLU(inplace=True),
-            torch.nn.Dropout(dropout),
-            torch.nn.Linear(linear_dim, linear_dim),
-            torch.nn.Dropout(dropout)
+            nn.Dropout(dropout),
+            nn.Linear(linear_dim, linear_dim),
+            nn.Dropout(dropout)
         )
 
-        self.conv_layerN = torch.nn.LayerNorm([channels, width])
-        self.linear_layerN = torch.nn.LayerNorm([channels, width])
+        self.conv_layerN = nn.LayerNorm([channels, width])
+        self.linear_layerN = nn.LayerNorm([channels, width])
 
     def forward(self, x):
         # X is B, C, W, T
