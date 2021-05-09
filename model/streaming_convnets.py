@@ -89,4 +89,6 @@ class Streaming_convnets(nn.Module):
 if __name__ == "__main__":
     model = Streaming_convnets(0.1, 80, 1)
     from torchscan import summary
+    import torch
     summary(model, (1, 80, 400))
+    print(f"Output shape: {model(torch.rand(1, 1, 80, 400)).shape}")

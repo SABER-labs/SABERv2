@@ -43,11 +43,11 @@ class QnetBlock(nn.Module):
         for _ in range(R - 1):
             self.layers.append(nn.Hardswish())
             self.layers.append(sepconv_bn(
-                out_size, out_size, kernel_size, stride))
+                out_size, out_size, kernel_size, 1))
         self.layers = nn.Sequential(*self.layers)
 
         self.residual = nn.ModuleList()
-        self.residual.append(torch.nn.Conv1d(in_size, out_size, kernel_size=1))
+        self.residual.append(torch.nn.Conv1d(in_size, out_size, kernel_size=1, stride=stride))
         self.residual.append(torch.nn.BatchNorm1d(out_size))
         self.residual = nn.Sequential(*self.residual)
 
@@ -61,10 +61,20 @@ class QuartzNet(nn.Module):
         self.c1 = sepconv_bn(n_mels, 256, kernel_size=33, stride=2)
         self.blocks = nn.Sequential(
             #         in   out  k   s  R
+            QnetBlock(256, 256, 33, 2, R=5),
+            QnetBlock(256, 256, 33, 1, R=5),
             QnetBlock(256, 256, 33, 1, R=5),
             QnetBlock(256, 256, 39, 1, R=5),
+            QnetBlock(256, 256, 39, 1, R=5),
+            QnetBlock(256, 256, 39, 1, R=5),
             QnetBlock(256, 512, 51, 1, R=5),
+            QnetBlock(512, 512, 51, 1, R=5),
+            QnetBlock(512, 512, 51, 1, R=5),
             QnetBlock(512, 512, 63, 1, R=5),
+            QnetBlock(512, 512, 63, 1, R=5),
+            QnetBlock(512, 512, 63, 1, R=5),
+            QnetBlock(512, 512, 75, 1, R=5),
+            QnetBlock(512, 512, 75, 1, R=5),
             QnetBlock(512, 512, 75, 1, R=5)
         )
         self.c2 = sepconv_bn(512, 512, kernel_size=87, dilation=2, padding=86)
@@ -84,4 +94,5 @@ class QuartzNet(nn.Module):
 if __name__ == "__main__":
     model = QuartzNet(80)
     from torchscan import summary
-    summary(model, (80, 400))
+    summary(model, (80, 400), receptive_field=True)
+    print(f"Output shape: {model(torch.rand(1, 80, 400)).shape}")
