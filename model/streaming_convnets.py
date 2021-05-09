@@ -3,6 +3,18 @@ import torch.nn.functional as F
 import torch.nn as nn
 from model.tds_block import TDSBlock
 
+class FBLayerNorm(nn.Module):
+
+    def __init__(self, channel, width):
+        super().__init__()
+        self.norm = nn.LayerNorm([channel, width])
+
+    def forward(self, x):
+        x = x.permute(0, 3, 1, 2)
+        x = self.norm(x)
+        x = x.permute(0, 2, 3, 1)
+        return x
+
 
 class Streaming_convnets(nn.Module):
 
@@ -10,99 +22,84 @@ class Streaming_convnets(nn.Module):
 
         super().__init__()
 
-        self.width = n_mels
+        conv_block1 = nn.Sequential(
+            nn.ConstantPad2d((5, 3, 0, 0), 0),
+            nn.Conv2d(input_channels, 15, (1, 10), (1, 2)),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
+            FBLayerNorm(15, n_mels),
+            TDSBlock(15, 9, n_mels, 0.1, 1),
+            TDSBlock(15, 9, n_mels, 0.1, 1)
+        )
 
-        self.pd1 = nn.ConstantPad2d((5, 3, 0, 0), 0)
-        self.c1 = nn.Conv2d(input_channels, 15, (1, 10), (1, 2))
-        self.dropout1 = nn.Dropout(dropout)
+        conv_block2 = nn.Sequential(
+            nn.ConstantPad2d((7, 1, 0, 0), 0),
+            nn.Conv2d(15, 19, (1, 10), (1, 2)),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
+            FBLayerNorm(19, n_mels),
+            TDSBlock(19, 9, n_mels, 0.1, 1),
+            TDSBlock(19, 9, n_mels, 0.1, 1),
+            TDSBlock(19, 9, n_mels, 0.1, 1)
+        )
 
-        self.tds1 = TDSBlock(15, 9, n_mels, 0.1, 0, 1, 0)
-        self.tds2 = TDSBlock(15, 9, n_mels, 0.1, 0, 1, 0)
+        conv_block3 = nn.Sequential(
+            nn.ConstantPad2d((9, 1, 0, 0), 0),
+            nn.Conv2d(19, 23, (1, 12), (1, 2)),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
+            FBLayerNorm(23, n_mels),
+            TDSBlock(23, 11, n_mels, 0.1, 1),
+            TDSBlock(23, 11, n_mels, 0.1, 1),
+            TDSBlock(23, 11, n_mels, 0.1, 1),
+            TDSBlock(23, 11, n_mels, 0.1, 0)   # Note, https://github.com/flashlight/wav2letter/blob/master/recipes/streaming_convnets/librispeech/am_500ms_future_context.arch#L26
+        )
 
-        self.pd2 = nn.ConstantPad2d((7, 1, 0, 0), 0)
-        self.c2 = nn.Conv2d(15, 19, (1, 10), (1, 2))
-        self.dropout2 = nn.Dropout(dropout)
+        conv_block4 = nn.Sequential(
+            nn.ConstantPad2d((10, 0, 0, 0), 0),
+            nn.Conv2d(23, 27, (1, 11), (1, 1)),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
+            FBLayerNorm(27, n_mels),
+            TDSBlock(27, 11, n_mels, 0.1, 0),
+            TDSBlock(27, 11, n_mels, 0.1, 0),
+            TDSBlock(27, 11, n_mels, 0.1, 0),
+            TDSBlock(27, 11, n_mels, 0.1, 0),
+            TDSBlock(27, 11, n_mels, 0.1, 0)
+        )
 
-        self.tds3 = TDSBlock(19, 9, n_mels, 0.1, 0, 1, 0)
-        self.tds4 = TDSBlock(19, 9, n_mels, 0.1, 0, 1, 0)
-        self.tds5 = TDSBlock(19, 9, n_mels, 0.1, 0, 1, 0)
+        self.layers = nn.Sequential(
+            conv_block1,
+            conv_block2,
+            conv_block3,
+            conv_block4
+        )
 
-        self.pd3 = nn.ConstantPad2d((9, 1, 0, 0), 0)
-        self.c3 = nn.Conv2d(19, 23, (1, 12), (1, 2))
-        self.dropout3 = nn.Dropout(dropout)
-
-        self.tds6 = TDSBlock(23, 11, n_mels, 0.1, 0, 1, 0)
-        self.tds7 = TDSBlock(23, 11, n_mels, 0.1, 0, 1, 0)
-        self.tds8 = TDSBlock(23, 11, n_mels, 0.1, 0, 1, 0)
-        self.tds9 = TDSBlock(23, 11, n_mels, 0.1, 0, 1, 0)
-
-        self.pd4 = nn.ConstantPad2d((10, 0, 0, 0), 0)
-        self.c4 = nn.Conv2d(23, 27, (1, 11), (1, 1))
-        self.dropout4 = nn.Dropout(dropout)
-
-        self.tds10 = TDSBlock(27, 11, n_mels, 0.1, 0, 0, 0)
-        self.tds11 = TDSBlock(27, 11, n_mels, 0.1, 0, 0, 0)
-        self.tds12 = TDSBlock(27, 11, n_mels, 0.1, 0, 0, 0)
-        self.tds13 = TDSBlock(27, 11, n_mels, 0.1, 0, 0, 0)
-        self.tds14 = TDSBlock(27, 11, n_mels, 0.1, 0, 0, 0)
+        self.final_feature_count = 27 * n_mels
 
     def forward(self, x):
+        x = self.layers(x)
+        return x.view(x.shape[0], self.final_feature_count, -1)
 
-        x = self.pd1(x)
-        x = self.c1(x)
-        x = F.relu(x)
-        x = self.dropout1(x)
+if __name__ == "__main__":
+    model = Streaming_convnets(0.1, 80, 1)
 
-        x = x.permute(0, 3, 1, 2)
-        x = F.layer_norm(x, [x.shape[2], x.shape[3]])
-        x = x.permute(0, 2, 3, 1)
+    x = torch.rand(8, 1, 80, 400)
 
-        x = self.tds1(x)
-        x = self.tds2(x)
+    from prettytable import PrettyTable
 
-        x = self.pd2(x)
-        x = self.c2(x)
-        x = F.relu(x)
-        x = self.dropout2(x)
+    def count_parameters(model):
+        table = PrettyTable(["Modules", "Parameters"])
+        total_params = 0
+        for name, parameter in model.named_parameters():
+            if not parameter.requires_grad: continue
+            param = parameter.numel()
+            table.add_row([name, f'{param/1e6:.2f}M'])
+            total_params+=param
+        print(table)
+        print(f"Total Trainable Params: {total_params}")
+        return total_params
 
-        x = x.permute(0, 3, 1, 2)
-        x = F.layer_norm(x, [x.shape[2], x.shape[3]])
-        x = x.permute(0, 2, 3, 1)
+    count_parameters(model)
 
-        x = self.tds3(x)
-        x = self.tds4(x)
-        x = self.tds5(x)
-
-        x = self.pd3(x)
-        x = self.c3(x)
-        x = F.relu(x)
-        x = self.dropout3(x)
-
-        x = x.permute(0, 3, 1, 2)
-        x = F.layer_norm(x, [x.shape[2], x.shape[3]])
-        x = x.permute(0, 2, 3, 1)
-
-        x = self.tds6(x)
-        x = self.tds7(x)
-        x = self.tds8(x)
-        x = self.tds9(x)
-
-        x = self.pd4(x)
-        x = self.c4(x)
-        x = F.relu(x)
-        x = self.dropout4(x)
-
-        x = x.permute(0, 3, 1, 2)
-        x = F.layer_norm(x, [x.shape[2], x.shape[3]])
-        x = x.permute(0, 2, 3, 1)
-
-        x = self.tds10(x)
-        x = self.tds11(x)
-        x = self.tds12(x)
-        x = self.tds13(x)
-        x = self.tds14(x)
-
-        x = x.permute(0, 3, 1, 2)
-        x = x.view(-1, x.shape[1], 1, self.width*27)
-
-        return x
+    print(f"Output shape: {model(x).size()}")

@@ -6,78 +6,54 @@ from utils.config import config
 
 class TDSBlock(nn.Module):
 
-    def __init__(self, channels, kernel_size, width, dropout, inner_linearDim, right_padding, time_dim=0):
+    def __init__(self, channels, kernel_size, width, dropout, right_padding):
         super().__init__()
+
         self.channels = channels
         self.width = width
-        self.time_dim = time_dim
-        """ Input Dimensions: Batch * Channel * Freuency * Time """
-        conv_padding = int((kernel_size - 1)/2 + 0.5)
-        self.total_padding = 0
-        if right_padding != -1:
-            self.total_padding = kernel_size - 1
 
-            assert self.total_padding > right_padding, "right padding exceeds the 'SAME' padding required for TDSBlock"
-            conv_padding = 0
+        assert(right_padding >= 0)
 
-        self.conv_padding = torch.nn.ConstantPad2d(
-            (self.total_padding-right_padding, right_padding, 0, 0), 0)
-        self.conv_layer = torch.nn.Conv2d(
-            channels, channels, (1, kernel_size), 1, (0, conv_padding))
+        self.conv_block = nn.Sequential(
+            torch.nn.ConstantPad2d(
+                        (kernel_size - 1 - right_padding, right_padding, 0, 0), 0),
+            torch.nn.Conv2d(
+                        channels, channels, (1, kernel_size), 1, (0, 0)),
+            nn.ReLU(inplace=True),
+            torch.nn.Dropout(dropout)
+        )
 
-        assert dropout >= 0, "dropout cannot be less than 0"
+        linear_dim = channels * width
 
-        self.dropout_conv = torch.nn.Dropout(dropout)
+        self.linear_block = nn.Sequential(
+            torch.nn.Linear(linear_dim, linear_dim),
+            nn.ReLU(inplace=True),
+            torch.nn.Dropout(dropout),
+            torch.nn.Linear(linear_dim, linear_dim),
+            torch.nn.Dropout(dropout)
+        )
 
-        self.linear_dim = channels * width
-
-        if inner_linearDim == 0:
-            inner_linearDim = self.linear_dim
-
-        self.linear1 = torch.nn.Linear(self.linear_dim, inner_linearDim)
-        self.dropout1 = torch.nn.Dropout(dropout)
-        self.linear2 = torch.nn.Linear(inner_linearDim, self.linear_dim)
-        self.dropout2 = torch.nn.Dropout(dropout)
-
-        if (time_dim):
-            self.conv_layerN = torch.nn.LayerNorm([channels, width, time_dim])
-            self.linear_layerN = torch.nn.LayerNorm(
-                [channels, width, time_dim])
-        else:
-            self.conv_layerN = torch.nn.LayerNorm([channels, width])
-            self.linear_layerN = torch.nn.LayerNorm([channels, width])
+        self.conv_layerN = torch.nn.LayerNorm([channels, width])
+        self.linear_layerN = torch.nn.LayerNorm([channels, width])
 
     def forward(self, x):
-
-        out = self.conv_padding(x)
-        out = self.conv_layer(out)
-        out = torch.relu(out)
-        out = self.dropout_conv(out)
-        out = out + x
-        if self.time_dim == 0:
-            out = out.permute(0, 3, 1, 2)
-            out = self.conv_layerN(out)
-            x = out.permute(0, 2, 3, 1)
-        else:
-            x = self.conv_layerN(out)
-        out = x.permute(0, 3, 1, 2)
-        out = out.view((out.shape[0], out.shape[1], 1, self.linear_dim))
-        out = self.linear1(out)
-        out = torch.relu(out)
-        out = self.dropout1(out)
-
-        out = self.linear2(out)
-        out = torch.relu(out)
-        out = self.dropout2(out)
-        out = out.permute((0, 2, 3, 1))
-        out = out.view((-1, self.channels, self.width, out.shape[3]))
-
-        out = out + x
-        if self.time_dim == 0:
-            out = out.permute(0, 3, 1, 2)
-            out = self.linear_layerN(out)
-            out = out.permute(0, 2, 3, 1)
-        else:
-            out = self.linear_layerN(out)
-
+        # X is B, C, W, T
+        out = self.conv_block(x) + x
+        out = out.permute(0, 3, 1, 2) # B, T, C, W
+        out = self.conv_layerN(out)
+        B, T, C, W = out.shape
+        out = out.view((B, T, 1, C*W))
+        out = self.linear_block(out) + out
+        out = out.view(B, T, C, W)
+        out = self.linear_layerN(out)
+        out = out.permute(0, 2, 3, 1) # B, C, W, T
         return out
+
+if __name__ == "__main__":
+    model = TDSBlock(15, 10, 80, 0.1, 1)
+    x = torch.rand(8, 15, 80, 400)
+    import time
+    start = time.perf_counter()
+    model(x)
+    end = time.perf_counter()
+    print(f"Time taken: {(end-start)*1000:.3f}ms")
