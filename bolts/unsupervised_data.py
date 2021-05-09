@@ -7,7 +7,6 @@ from typing import Optional
 from transforms.audio import RandomSoxAugmentations, NoSoxAugmentations
 from transforms.mfsc import ToMelSpec, SpecAug
 from dataset.test_dataset import SimClrTestDataset
-import time
 from pytorch_lightning.utilities import move_data_to_device
 
 

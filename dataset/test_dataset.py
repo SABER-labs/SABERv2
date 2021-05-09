@@ -1,7 +1,6 @@
 import os
-import warnings
 from pathlib import Path
-from typing import List, Dict, Tuple, Union, Optional
+from typing import Dict, List, Tuple, Union
 import csv
 from torch import Tensor
 from torch.utils.data import Dataset

@@ -4,11 +4,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from utils.config import config
 from bolts.unsupervised_data import UnsupervisedCommonVoiceDataModule
 from bolts.simclr import SpeechSimClr
-from bolts.siamsim import Simsiam
-from bolts.barlow_twins import BarlowTwins
-from bolts.aggregated_twin_strat import AggregatedEntropicTwins
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.plugins import DDPPlugin, DDPShardedPlugin
+from pytorch_lightning.plugins import DDPPlugin
 
 ssl_datamodule = UnsupervisedCommonVoiceDataModule()
 ssl_datamodule.prepare_data()

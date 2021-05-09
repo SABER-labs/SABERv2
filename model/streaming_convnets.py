@@ -1,5 +1,3 @@
-import torch
-import torch.nn.functional as F
 import torch.nn as nn
 from model.tds_block import TDSBlock
 

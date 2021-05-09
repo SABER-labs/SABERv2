@@ -1,11 +1,9 @@
 import pytorch_lightning as pl
 import torch
-import math
 from model.streaming_convnets import Streaming_convnets
 from utils.config import config
 from utils.training_utils import length_to_mask
 from losses.contrastive_loss import NT_Xent
-import torch.nn.functional as F
 from model.projection_head import Projection
 from pl_bolts.optimizers.lars_scheduling import LARSWrapper
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR

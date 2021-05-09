@@ -1,17 +1,17 @@
-import os
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from utils.config import config
 from bolts.unsupervised_data import UnsupervisedCommonVoiceDataModule
 from bolts.simclr import SpeechSimClr
-from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.plugins import DDPPlugin, DDPShardedPlugin
+from pytorch_lightning.plugins import DDPPlugin
 
 simclr_datamodule = UnsupervisedCommonVoiceDataModule()
 simclr_datamodule.prepare_data()
 simclr_datamodule.setup(stage='test')
 
-simclr = SpeechSimClr.load_from_checkpoint('training_artifacts/weights_best/epoch=35-step=271331.ckpt', num_samples=simclr_datamodule.num_test_samples(), strict=True)
+simclr = SpeechSimClr.load_from_checkpoint(
+    'training_artifacts/weights_31/last.ckpt',
+    num_samples=simclr_datamodule.num_test_samples(),
+    strict=True)
 
 trainer = pl.Trainer(
     default_root_dir=config.trainer.default_root_dir,
