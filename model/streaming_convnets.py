@@ -3,6 +3,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 from model.tds_block import TDSBlock
 
+
 class FBLayerNorm(nn.Module):
 
     def __init__(self, channel, width):
@@ -52,7 +53,9 @@ class Streaming_convnets(nn.Module):
             TDSBlock(23, 11, n_mels, 0.1, 1),
             TDSBlock(23, 11, n_mels, 0.1, 1),
             TDSBlock(23, 11, n_mels, 0.1, 1),
-            TDSBlock(23, 11, n_mels, 0.1, 0)   # Note, https://github.com/flashlight/wav2letter/blob/master/recipes/streaming_convnets/librispeech/am_500ms_future_context.arch#L26
+            # Note,
+            # https://github.com/flashlight/wav2letter/blob/master/recipes/streaming_convnets/librispeech/am_500ms_future_context.arch#L26
+            TDSBlock(23, 11, n_mels, 0.1, 0)
         )
 
         conv_block4 = nn.Sequential(
@@ -80,6 +83,7 @@ class Streaming_convnets(nn.Module):
     def forward(self, x):
         x = self.layers(x)
         return x.view(x.shape[0], self.final_feature_count, -1)
+
 
 if __name__ == "__main__":
     model = Streaming_convnets(0.1, 80, 1)

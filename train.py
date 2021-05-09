@@ -18,8 +18,11 @@ ssl_datamodule.setup(stage='fit')
 # ssl = Simsiam(num_samples=ssl_datamodule.num_train_samples())
 ssl = SpeechSimClr(num_samples=ssl_datamodule.num_train_samples())
 # ssl = AggregatedEntropicTwins(num_samples=ssl_datamodule.num_train_samples())
-logger = TensorBoardLogger(os.path.join(
-    config.trainer.default_root_dir, config.trainer.tensorboard_logdir), name='ssl')
+logger = TensorBoardLogger(
+    os.path.join(
+        config.trainer.default_root_dir,
+        config.trainer.tensorboard_logdir),
+    name='ssl')
 
 model_checkpoint = ModelCheckpoint(
     dirpath=os.path.join(config.trainer.default_root_dir,

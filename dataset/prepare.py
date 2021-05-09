@@ -25,7 +25,7 @@ if __name__ == "__main__":
         dataset['duration'] <= config.dataset.max_audio_in_s)]
 
     unsupervised_dataset = dataset.sample(
-        frac=1-(config.dataset.percent_split/100.0), random_state=100)
+        frac=1 - (config.dataset.percent_split / 100.0), random_state=100)
     supervised_dataset = dataset[~dataset.index.isin(
         unsupervised_dataset.index)]
     unsupervised_path = os.path.join(
@@ -33,9 +33,17 @@ if __name__ == "__main__":
     supervised_path = os.path.join(
         config.dataset.root, config.dataset.supervised_train)
     unsupervised_dataset.to_csv(
-        unsupervised_path, sep="\t", quoting=csv.QUOTE_NONE, header=True, index=False)
+        unsupervised_path,
+        sep="\t",
+        quoting=csv.QUOTE_NONE,
+        header=True,
+        index=False)
     supervised_dataset.to_csv(
-        supervised_path, sep="\t", quoting=csv.QUOTE_NONE, header=True, index=False)
+        supervised_path,
+        sep="\t",
+        quoting=csv.QUOTE_NONE,
+        header=True,
+        index=False)
     print(
         f"Unsupervised set created at {unsupervised_path} with {len(unsupervised_dataset)} files.")
     print(

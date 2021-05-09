@@ -85,8 +85,10 @@ class SpeechSimClr(pl.LightningModule):
         return items
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(
-        ), lr=config.trainer.learning_rate, weight_decay=config.trainer.weight_decay)
+        optimizer = torch.optim.Adam(
+            self.parameters(),
+            lr=config.trainer.learning_rate,
+            weight_decay=config.trainer.weight_decay)
         optimizer = LARSWrapper(optimizer, eta=0.001, clip=False)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,

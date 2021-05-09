@@ -13,9 +13,15 @@ def conv_bn_act(in_size, out_size, kernel_size, stride=1, dilation=1):
     )
 
 
-def sepconv_bn(in_size, out_size, kernel_size, stride=1, dilation=1, padding=None):
+def sepconv_bn(
+        in_size,
+        out_size,
+        kernel_size,
+        stride=1,
+        dilation=1,
+        padding=None):
     if padding is None:
-        padding = (kernel_size-1)//2
+        padding = (kernel_size - 1) // 2
     return nn.Sequential(
         torch.nn.Conv1d(in_size, in_size, kernel_size,
                         stride=stride, dilation=dilation, groups=in_size,
@@ -73,6 +79,7 @@ class QuartzNet(nn.Module):
         c2 = F.hardswish(self.c2(blocks))
         c3 = self.c3(c2)
         return c3
+
 
 if __name__ == "__main__":
     model = QuartzNet(80)

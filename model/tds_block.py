@@ -16,9 +16,9 @@ class TDSBlock(nn.Module):
 
         self.conv_block = nn.Sequential(
             nn.ConstantPad2d(
-                        (kernel_size - 1 - right_padding, right_padding, 0, 0), 0),
+                (kernel_size - 1 - right_padding, right_padding, 0, 0), 0),
             nn.Conv2d(
-                        channels, channels, (1, kernel_size), 1, (0, 0)),
+                channels, channels, (1, kernel_size), 1, (0, 0)),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout)
         )
@@ -39,15 +39,16 @@ class TDSBlock(nn.Module):
     def forward(self, x):
         # X is B, C, W, T
         out = self.conv_block(x) + x
-        out = out.permute(0, 3, 1, 2) # B, T, C, W
+        out = out.permute(0, 3, 1, 2)  # B, T, C, W
         out = self.conv_layerN(out)
         B, T, C, W = out.shape
-        out = out.view((B, T, 1, C*W))
+        out = out.view((B, T, 1, C * W))
         out = self.linear_block(out) + out
         out = out.view(B, T, C, W)
         out = self.linear_layerN(out)
-        out = out.permute(0, 2, 3, 1) # B, C, W, T
+        out = out.permute(0, 2, 3, 1)  # B, C, W, T
         return out
+
 
 if __name__ == "__main__":
     model = TDSBlock(15, 10, 80, 0.1, 1)

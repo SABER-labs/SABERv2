@@ -104,8 +104,10 @@ class AggregatedEntropicTwins(pl.LightningModule):
         return items
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(
-        ), lr=config.trainer.learning_rate, weight_decay=config.trainer.weight_decay)
+        optimizer = torch.optim.Adam(
+            self.parameters(),
+            lr=config.trainer.learning_rate,
+            weight_decay=config.trainer.weight_decay)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=int(config.trainer.warmup_epochs *

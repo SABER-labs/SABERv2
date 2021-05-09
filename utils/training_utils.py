@@ -62,8 +62,12 @@ def length_to_mask(length, stride=1, max_len=None, dtype=None):
     length = (length / stride).ceil_().to(dtype=length.dtype,
                                           device=length.device)
     max_len = math.ceil(max_len / stride) if max_len else length.max().item()
-    mask = torch.arange(max_len, device=length.device,
-                        dtype=length.dtype).expand(len(length), max_len) < length.unsqueeze(1)
+    mask = torch.arange(
+        max_len,
+        device=length.device,
+        dtype=length.dtype).expand(
+        len(length),
+        max_len) < length.unsqueeze(1)
     if dtype is not None:
         mask = torch.as_tensor(mask, dtype=dtype, device=length.device)
     return mask

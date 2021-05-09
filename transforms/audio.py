@@ -54,9 +54,10 @@ class RandomSoxAugmentations(object):
         self.augmentation_prob = config.augmentations.apply_prob
         self.noise_file_list = [
             os.path.join(config.noises.noises_root, path.strip())
-            for path in
-            open(os.path.join(config.noises.noises_root, config.noises.noisefilelist), 'r').read().split("\n") if path
-        ]
+            for path in open(
+                os.path.join(
+                    config.noises.noises_root, config.noises.noisefilelist),
+                'r').read().split("\n") if path]
 
     def __add_noise(self, sample: torch.Tensor):
         noise, _ = torchaudio.load(
