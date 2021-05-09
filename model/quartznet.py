@@ -73,3 +73,8 @@ class QuartzNet(nn.Module):
         c2 = F.hardswish(self.c2(blocks))
         c3 = self.c3(c2)
         return c3
+
+if __name__ == "__main__":
+    model = QuartzNet(80)
+    from torchscan import summary
+    summary(model, (80, 400))

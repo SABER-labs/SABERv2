@@ -83,23 +83,5 @@ class Streaming_convnets(nn.Module):
 
 if __name__ == "__main__":
     model = Streaming_convnets(0.1, 80, 1)
-
-    x = torch.rand(8, 1, 80, 400)
-
-    from prettytable import PrettyTable
-
-    def count_parameters(model):
-        table = PrettyTable(["Modules", "Parameters"])
-        total_params = 0
-        for name, parameter in model.named_parameters():
-            if not parameter.requires_grad: continue
-            param = parameter.numel()
-            table.add_row([name, f'{param/1e6:.2f}M'])
-            total_params+=param
-        print(table)
-        print(f"Total Trainable Params: {total_params}")
-        return total_params
-
-    count_parameters(model)
-
-    print(f"Output shape: {model(x).size()}")
+    from torchscan import summary
+    summary(model, (1, 80, 400))
