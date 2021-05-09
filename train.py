@@ -14,10 +14,11 @@ ssl_datamodule = UnsupervisedCommonVoiceDataModule()
 ssl_datamodule.prepare_data()
 ssl_datamodule.setup(stage='fit')
 
+ssl = SpeechSimClr(num_samples=ssl_datamodule.num_train_samples())
 # ssl = BarlowTwins(num_samples=ssl_datamodule.num_train_samples())
 # ssl = Simsiam(num_samples=ssl_datamodule.num_train_samples())
-ssl = SpeechSimClr(num_samples=ssl_datamodule.num_train_samples())
 # ssl = AggregatedEntropicTwins(num_samples=ssl_datamodule.num_train_samples())
+
 logger = TensorBoardLogger(
     os.path.join(
         config.trainer.default_root_dir,

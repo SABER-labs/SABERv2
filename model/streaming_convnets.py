@@ -46,7 +46,7 @@ class Streaming_convnets(nn.Module):
 
         conv_block3 = nn.Sequential(
             nn.ConstantPad2d((9, 1, 0, 0), 0),
-            nn.Conv2d(19, 23, (1, 12), (1, 2)),
+            nn.Conv2d(19, 23, (1, 12), (1, 1)),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout),
             FBLayerNorm(23, n_mels),
@@ -83,6 +83,9 @@ class Streaming_convnets(nn.Module):
     def forward(self, x):
         x = self.layers(x)
         return x.view(x.shape[0], self.final_feature_count, -1)
+
+    def model_stride(self):
+        return 4
 
 
 if __name__ == "__main__":

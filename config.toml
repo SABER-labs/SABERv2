@@ -62,7 +62,7 @@ noisefilelist = "noiselist.txt"
 snr_range = [3, 20]
 
 [model]
-output_dim = 1024
+output_dim = 2160
 
 [simclr]
 projection_head_dim = 1024

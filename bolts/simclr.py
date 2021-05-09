@@ -1,7 +1,7 @@
 import pytorch_lightning as pl
 import torch
 import math
-from model.quartznet import QuartzNet
+from model.streaming_convnets import Streaming_convnets
 from utils.config import config
 from utils.training_utils import length_to_mask
 from losses.contrastive_loss import NT_Xent
@@ -15,7 +15,7 @@ class SpeechSimClr(pl.LightningModule):
 
     def __init__(self, num_samples):
         super().__init__()
-        self.encoder = QuartzNet(n_mels=config.audio.n_mels)
+        self.encoder = Streaming_convnets(0.1, config.audio.n_mels, 1)
         self.steps_per_epoch = (num_samples // (config.dataloader.batch_size *
                                 config.trainer.num_gpus * config.trainer.num_nodes)) + 1
         self.projection = Projection()
@@ -28,7 +28,7 @@ class SpeechSimClr(pl.LightningModule):
         )
 
     def forward(self, x):
-        return self.encoder(x)
+        return self.encoder(x.unsqueeze(1))
 
     def shared_step(self, batch):
         (img1, img2, img1_len, img2_len) = batch
@@ -39,8 +39,11 @@ class SpeechSimClr(pl.LightningModule):
             img2_len, stride=self.model_stride, max_len=img2.size(2))
 
         # get h representations, bolts resnet returns a list
-        h1 = self(img1) * h1_mask[:, None, :]
-        h2 = self(img2) * h2_mask[:, None, :]
+        h1 = self(img1)
+        h2 = self(img2)
+
+        h1 *= h1_mask[:, None, :h1.size(2)]
+        h2 *= h2_mask[:, None, :h2.size(2)]
 
         # get z representations
         z1 = self.projection(h1)
