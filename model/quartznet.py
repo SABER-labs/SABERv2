@@ -7,8 +7,8 @@ import torch.nn as nn
 
 def conv_bn_act(in_size, out_size, kernel_size, stride=1, dilation=1):
     return nn.Sequential(
-        nn.Conv1d(in_size, out_size, kernel_size, stride, dilation=dilation),
-        nn.BatchNorm1d(out_size),
+        nn.Conv1d(in_size, out_size, kernel_size, stride=stride, dilation=dilation),
+        nn.GroupNorm(1, out_size),
         nn.Hardswish()
     )
 
@@ -21,17 +21,15 @@ def sepconv_bn(
         dilation=1,
         padding=None):
     if padding is None:
-        padding = (kernel_size - 1) // 2
+        padding = (kernel_size) // 2
+    # print(f"Conv1d set in in_ch={in_size}, out_ch={in_size}, kw={kernel_size}, s={stride}, d={dilation}, g={in_size}, p={padding}")
     return nn.Sequential(
-        torch.nn.Conv1d(in_size, in_size, kernel_size,
+        torch.nn.Conv1d(in_size, in_size, kernel_size=kernel_size,
                         stride=stride, dilation=dilation, groups=in_size,
                         padding=padding),
         torch.nn.Conv1d(in_size, out_size, kernel_size=1),
-        nn.BatchNorm1d(out_size)
+        nn.GroupNorm(1, out_size)
     )
-
-# Main block B_i
-
 
 class QnetBlock(nn.Module):
     def __init__(self, in_size, out_size, kernel_size, stride=1,
@@ -48,7 +46,7 @@ class QnetBlock(nn.Module):
 
         self.residual = nn.ModuleList()
         self.residual.append(torch.nn.Conv1d(in_size, out_size, kernel_size=1, stride=stride))
-        self.residual.append(torch.nn.BatchNorm1d(out_size))
+        self.residual.append(torch.nn.GroupNorm(1, out_size))
         self.residual = nn.Sequential(*self.residual)
 
     def forward(self, x):
@@ -81,7 +79,7 @@ class QuartzNet(nn.Module):
         self.c3 = conv_bn_act(512, 1024, kernel_size=1)
 
     def model_stride(self):
-        return 2
+        return 4
 
     def forward(self, x):
         c1 = F.hardswish(self.c1(x))
