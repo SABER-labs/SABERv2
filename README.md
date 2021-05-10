@@ -15,9 +15,9 @@ Easily reproducible baselines for automatic speech recognition using semi-superv
 * Start tensorboard using `tensorboard --logdir training_artifacts/tb_logs`
 
 ## TODOS
+* supervised training and dataset
+* Check online evaluator piece from [Pybolts Simclr](https://github.com/PyTorchLightning/lightning-bolts/blob/master/pl_bolts/models/self_supervised/simclr/simclr_module.py)
 * ~~Add more logs.~~
 * ~~streaming convnets model~~
 * ~~save and load projection weighs for training~~
-* supervised training and dataset
-* Check online evaluator piece from [Pybolts Simclr](https://github.com/PyTorchLightning/lightning-bolts/blob/master/pl_bolts/models/self_supervised/simclr/simclr_module.py)
 * ~~Check if anything is missing from [Athena Simclr](https://github.com/athena-team/athena/blob/simclr/athena/models/simclr.py)~~
