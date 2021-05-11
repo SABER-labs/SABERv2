@@ -99,3 +99,13 @@ class AggregatedProjection(nn.Module):
     def forward(self, x):
         x = self.model(x)
         return x
+
+class SupervisedHead(nn.Module):
+
+    def __init__(self, hidden_dim=config.simclr.projection_head_dim, final_embedding_dim=config.dataset.n_classes):
+        super().__init__()
+        self.layer = nn.Linear(hidden_dim, final_embedding_dim)
+
+    def forward(self, x):
+        x = x.permute(0, 2, 1)
+        return self.layer(x)

@@ -12,3 +12,4 @@ torchaudio>=0.8.0
 lightning-bolts>=0.3.3
 pytorch-lightning>=1.2.10
 torchscan
+jiwer
