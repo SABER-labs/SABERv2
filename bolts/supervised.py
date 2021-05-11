@@ -68,6 +68,7 @@ class SupervisedTask(pl.LightningModule):
         ref = self.get_tokenizer().decode(target)
 
         pred, ref = zip(*[(pd, rf) for (pd, rf) in zip(pred, ref) if rf != ""])
+        pred, ref = list(pred), list(ref)
 
         transformation = jiwer.Compose([
             jiwer.RemoveMultipleSpaces(),
