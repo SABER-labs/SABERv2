@@ -67,10 +67,10 @@ class SupervisedTask(pl.LightningModule):
         pred = self.get_tokenizer().decode(self.trainer.datamodule.decode_model_output(h))
         ref = self.get_tokenizer().decode(target)
         error = wer(ref, pred)
-        pred_sizes = [len(pd) for pd in pred]
-        cer = sum([(cer * token_size) for (cer, token_size) in zip([wer([c for c in rf],
-                  [c for c in pd]) for (rf, pd) in zip(ref, pred)], pred_sizes)]) / sum(pred_sizes)
-        result = {'val_loss': loss, 'wer': error, 'cer': cer}
+        ref_sizes = [len(rf) for rf in ref]
+        cers = [wer([c for c in rf], [c for c in pd]) for (rf, pd) in zip(ref, pred)]
+        weighted_cer = sum([(cer * token_size) for (cer, token_size) in zip(cers, ref_sizes)]) / sum(ref_sizes)
+        result = {'val_loss': loss, 'wer': error, 'cer': weighted_cer}
         return result
 
     def validation_epoch_end(self, output):

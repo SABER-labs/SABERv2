@@ -87,11 +87,9 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
 
     def set_stage(self, stage):
         if stage in ["val", "test"]:
-            print('Stage set to val')
             self.transform = self.only_mel
             self.augmentation = self.no_augmentation
         else:
-            print('Stage set to train')
             self.transform = self.mel_then_specaug
             self.augmentation = self.sox_augmentations
 
