@@ -79,9 +79,9 @@ class SupervisedTask(pl.LightningModule):
         cer = [x['cer'] for x in output]
         avg_error = sum(error)/len(error)
         avg_cer = sum(cer)/len(cer)
-        self.log('avg_val_loss', avg_val_loss, logger=True)
+        self.log('val_loss', avg_val_loss, logger=True)
         self.log('wer', avg_error)
-        self.log('wer', avg_cer)
+        self.log('cer', avg_cer)
 
     def get_progress_bar_dict(self):
         items = super().get_progress_bar_dict()
