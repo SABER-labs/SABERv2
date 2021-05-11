@@ -74,7 +74,6 @@ class SupervisedTask(pl.LightningModule):
             jiwer.Strip(),
             jiwer.ToLowerCase(),
             jiwer.RemovePunctuation(),
-            jiwer.SentencesToListOfWords(),
             jiwer.RemoveEmptyStrings()
         ])
 
