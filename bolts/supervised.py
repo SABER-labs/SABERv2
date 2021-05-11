@@ -7,6 +7,7 @@ from model.projection_head import SupervisedHead
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 import jiwer
 
+
 class SupervisedTask(pl.LightningModule):
 
     def __init__(self, num_samples):
@@ -66,6 +67,8 @@ class SupervisedTask(pl.LightningModule):
         pred = self.get_tokenizer().decode(self.trainer.datamodule.decode_model_output(h))
         ref = self.get_tokenizer().decode(target)
 
+        pred, ref = zip(*[(pd, rf) for (pd, rf) in zip(pred, ref) if rf != ""])
+
         transformation = jiwer.Compose([
             jiwer.RemoveMultipleSpaces(),
             jiwer.Strip(),
@@ -75,11 +78,12 @@ class SupervisedTask(pl.LightningModule):
             jiwer.RemoveEmptyStrings()
         ])
 
-
         error = jiwer.wer(ref, pred, transformation, transformation)
         ref_sizes = [len(rf) for rf in ref]
-        cers = [jiwer.wer([c for c in rf], [c for c in pd], transformation, transformation) for (rf, pd) in zip(ref, pred)]
-        weighted_cer = sum([(cer * token_size) for (cer, token_size) in zip(cers, ref_sizes)]) / sum(ref_sizes)
+        cers = [jiwer.wer([c for c in rf], [c for c in pd], transformation,
+                          transformation) for (rf, pd) in zip(ref, pred)]
+        weighted_cer = sum([(cer * token_size) for (cer, token_size)
+                           in zip(cers, ref_sizes)]) / sum(ref_sizes)
         result = {'val_loss': loss, 'wer': error, 'cer': weighted_cer}
         return result
 
