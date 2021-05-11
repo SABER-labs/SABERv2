@@ -154,10 +154,17 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
 
 
 if __name__ == "__main__":
+    from tqdm import tqdm
     loader = SupervisedCommonVoiceDataModule()
     loader.prepare_data()
-    loader.setup()
-    for i, batch in enumerate(loader.train_dataloader()):
-        # print(batch[0].shape, batch[1].shape, batch[2], batch[3])
-        if i > 0 and i % 1 == 0:
+    loader.setup('val')
+    for i, batch in enumerate(tqdm(loader.val_dataloader())):
+        ref = loader.get_tokenizer().decode(batch[2].detach().cpu().numpy().tolist())
+        lengths = [len(rf) for rf in ref]
+        if 0 in lengths:
             break
+    print(f"Sentence with issue was: {ref}")
+        # print(ref)
+        # print(batch[0].shape, batch[1].shape, batch[2], batch[3])
+        # if i > 0 and i % 1 == 0:
+        #     break

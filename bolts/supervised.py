@@ -5,8 +5,7 @@ from utils.config import config
 import torch.nn.functional as F
 from model.projection_head import SupervisedHead
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
-from jiwer import wer
-
+import jiwer
 
 class SupervisedTask(pl.LightningModule):
 
@@ -66,9 +65,20 @@ class SupervisedTask(pl.LightningModule):
 
         pred = self.get_tokenizer().decode(self.trainer.datamodule.decode_model_output(h))
         ref = self.get_tokenizer().decode(target)
-        error = wer(ref, pred)
+
+        transformation = jiwer.Compose([
+            jiwer.RemoveMultipleSpaces(),
+            jiwer.Strip(),
+            jiwer.ToLowerCase(),
+            jiwer.RemovePunctuation(),
+            jiwer.SentencesToListOfWords(),
+            jiwer.RemoveEmptyStrings()
+        ])
+
+
+        error = jiwer.wer(ref, pred, transformation, transformation)
         ref_sizes = [len(rf) for rf in ref]
-        cers = [wer([c for c in rf], [c for c in pd]) for (rf, pd) in zip(ref, pred)]
+        cers = [jiwer.wer([c for c in rf], [c for c in pd], transformation, transformation) for (rf, pd) in zip(ref, pred)]
         weighted_cer = sum([(cer * token_size) for (cer, token_size) in zip(cers, ref_sizes)]) / sum(ref_sizes)
         result = {'val_loss': loss, 'wer': error, 'cer': weighted_cer}
         return result
