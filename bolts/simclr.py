@@ -5,7 +5,6 @@ from utils.config import config
 from utils.training_utils import length_to_mask
 from losses.contrastive_loss import NT_Xent
 from model.projection_head import Projection
-from pl_bolts.optimizers.lars_scheduling import LARSWrapper
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 
 
@@ -90,7 +89,6 @@ class SpeechSimClr(pl.LightningModule):
             self.parameters(),
             lr=config.trainer.learning_rate,
             weight_decay=config.trainer.weight_decay)
-        optimizer = LARSWrapper(optimizer, eta=0.001, clip=False)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=int(config.trainer.warmup_epochs *
