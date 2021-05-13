@@ -6,7 +6,18 @@ import torch.nn.functional as F
 from model.projection_head import SupervisedHead
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 import jiwer
+import Levenshtein as Lev
 
+def cer(s1, s2):
+        """
+        Computes the Character Error Rate, defined as the edit distance.
+
+        Arguments:
+            s1 (string): space-separated sentence
+            s2 (string): space-separated sentence
+        """
+        s1, s2, = s1.replace(' ', ''), s2.replace(' ', '')
+        return Lev.distance(s1, s2) / len(s1)
 
 class SupervisedTask(pl.LightningModule):
 
@@ -79,23 +90,19 @@ class SupervisedTask(pl.LightningModule):
         ])
 
         error = jiwer.wer(ref, pred, transformation, transformation)
-        ref_sizes = [len(rf) for rf in ref]
-        cers = [jiwer.wer([c for c in rf], [c for c in pd], transformation,
-                          transformation) for (rf, pd) in zip(ref, pred)]
-        weighted_cer = sum([(cer * token_size) for (cer, token_size)
-                           in zip(cers, ref_sizes)]) / sum(ref_sizes)
-        result = {'val_loss': loss, 'wer': error, 'cer': weighted_cer}
+        cer_list = [cer(transformation(rf), transformation(pd)) for (rf, pd) in zip(ref, pred)]
+        cers = sum(cer_list) / len(cer_list)
+        result = {'val_loss': loss, 'wer': error, 'cer': cers}
         return result
 
     def validation_epoch_end(self, output):
+
         avg_val_loss = torch.stack([x['val_loss'] for x in output]).mean()
-        error = [x['wer'] for x in output]
-        cer = [x['cer'] for x in output]
-        avg_error = sum(error)/len(error)
-        avg_cer = sum(cer)/len(cer)
-        self.log('val_loss', avg_val_loss, logger=True)
-        self.log('wer', avg_error)
-        self.log('cer', avg_cer)
+        avg_error = torch.stack([x['wer'] for x in output]).mean()
+        avg_cer = torch.stack([x['cer'] for x in output]).mean()
+        self.log('val_loss', avg_val_loss, prog_bar=True)
+        self.log('val_wer', avg_error, prog_bar=True)
+        self.log('val_cer', avg_cer, prog_bar=True)
 
     def get_progress_bar_dict(self):
         items = super().get_progress_bar_dict()
