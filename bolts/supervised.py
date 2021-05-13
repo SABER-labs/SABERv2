@@ -53,7 +53,7 @@ class SupervisedTask(pl.LightningModule):
                                                                        device=img1_len.device)
 
         h = self(img1)
-        h = h.permute(1, 0, 2)
+        h = h.permute(1, 0, 2).contiguous()
         return self.criterion(h, target, img1_len, target_len)
 
     def training_step(self, batch, batch_idx):
@@ -69,7 +69,7 @@ class SupervisedTask(pl.LightningModule):
                                                                        device=img1_len.device)
 
         h = self(img1)
-        h = h.permute(1, 0, 2)
+        h = h.permute(1, 0, 2).contiguous()
         loss = self.criterion(h, target, img1_len, target_len)
 
         h = torch.argmax(h.permute(1, 0, 2), 2)
@@ -82,10 +82,10 @@ class SupervisedTask(pl.LightningModule):
         pred, ref = zip(*[(pd, rf) for (pd, rf) in zip(pred, ref) if rf != ""])
         pred, ref = list(pred), list(ref)
 
-        error = jiwer.wer(ref, pred)
-        cer_list = [cer(rf, pd) for (rf, pd) in zip(ref, pred)]
-        cers = sum(cer_list) / len(cer_list)
-        result = {'val_loss': loss, 'wer': error, 'cer': cers}
+
+        wer_score = jiwer.wer(ref, pred)
+        cer_score = mean([cer(rf, pd) for (rf, pd) in zip(ref, pred)])
+        result = {'val_loss': loss, 'wer': wer_score, 'cer': cer_score}
         return result
 
     def validation_epoch_end(self, output):
