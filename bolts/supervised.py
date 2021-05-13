@@ -82,16 +82,8 @@ class SupervisedTask(pl.LightningModule):
         pred, ref = zip(*[(pd, rf) for (pd, rf) in zip(pred, ref) if rf != ""])
         pred, ref = list(pred), list(ref)
 
-        transformation = jiwer.Compose([
-            jiwer.RemoveMultipleSpaces(),
-            jiwer.Strip(),
-            jiwer.ToLowerCase(),
-            jiwer.RemovePunctuation(),
-            jiwer.RemoveEmptyStrings()
-        ])
-
-        error = jiwer.wer(ref, pred, transformation, transformation)
-        cer_list = [cer(transformation(rf), transformation(pd)) for (rf, pd) in zip(ref, pred)]
+        error = jiwer.wer(ref, pred)
+        cer_list = [cer(rf, pd) for (rf, pd) in zip(ref, pred)]
         cers = sum(cer_list) / len(cer_list)
         result = {'val_loss': loss, 'wer': error, 'cer': cers}
         return result

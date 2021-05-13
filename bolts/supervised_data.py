@@ -11,6 +11,22 @@ import sentencepiece as spm
 import os
 import pandas as pd
 import shutil
+import jiwer
+
+
+def cleaner_func():
+    transformation = jiwer.Compose([
+        jiwer.RemoveMultipleSpaces(),
+        jiwer.Strip(),
+        jiwer.ToLowerCase(),
+        jiwer.RemovePunctuation(),
+        jiwer.RemoveEmptyStrings()
+    ])
+
+    def cleanup(text):
+        return transformation(text)
+
+    return cleanup
 
 
 def build_text_corpus():
@@ -23,9 +39,10 @@ def build_text_corpus():
         li.append(df)
     frame = pd.concat(li, axis=0, ignore_index=True)
     a_list = frame['sentence'].values
+    cleaner = cleaner_func()
     with open(os.path.join(config.dataset.root, config.dataset.text_corpus), 'w') as textfile:
         for element in a_list:
-            textfile.write(str(element).lower() + "\n")
+            textfile.write(cleaner(str(element)) + "\n")
 
 
 class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
@@ -38,6 +55,7 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
         self.mel_then_specaug = torch.jit.script(
             torch.nn.Sequential(ToMelSpec(), SpecAug()))
         self.only_mel = torch.jit.script(torch.nn.Sequential(ToMelSpec()))
+        self.cleaner = cleaner_func()
 
     def prepare_data(self):
 
@@ -74,6 +92,9 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
 
     def get_tokenizer(self):
         return self.tokenizer
+
+    def clean_text(self, text):
+        return self.cleaner(text)
 
     def decode_model_output(self, targets):
         new_targets = []
@@ -136,7 +157,7 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
         raw_inputs = [b[0] for b in batch if b]
         input_a = [self.augmentation(raw_input).transpose(1, 0)
                    for raw_input in raw_inputs]
-        target_sentences = [torch.tensor(self.tokenizer.encode(b[2]['sentence'].lower(), enable_sampling=True, alpha=0.9, nbest_size=10),
+        target_sentences = [torch.tensor(self.tokenizer.encode(self.clean_text(b[2]['sentence']), enable_sampling=True, alpha=0.9, nbest_size=10),
                                          dtype=torch.int32, device=input_a[0].device) for b in batch if b]
 
         input_a_lengths = torch.tensor(
