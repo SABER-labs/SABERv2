@@ -7,6 +7,7 @@ from model.projection_head import SupervisedHead
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 import jiwer
 import Levenshtein as Lev
+from statistics import mean
 
 def cer(s1, s2):
         """
@@ -98,8 +99,8 @@ class SupervisedTask(pl.LightningModule):
     def validation_epoch_end(self, output):
 
         avg_val_loss = torch.stack([x['val_loss'] for x in output]).mean()
-        avg_error = torch.stack([x['wer'] for x in output]).mean()
-        avg_cer = torch.stack([x['cer'] for x in output]).mean()
+        avg_error = mean([x['wer'] for x in output])
+        avg_cer = mean([x['cer'] for x in output])
         self.log('val_loss', avg_val_loss, prog_bar=True)
         self.log('val_wer', avg_error, prog_bar=True)
         self.log('val_cer', avg_cer, prog_bar=True)
