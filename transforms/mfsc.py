@@ -35,7 +35,7 @@ class ToMelSpec(torch.nn.Module):
 
     def forward(self, sample: torch.Tensor) -> torch.Tensor:
         mel_spec = self.to_melspec(sample)
-        std, mean = torch.std_mean(mel_spec, (1, 2))
+        std, mean = torch.std_mean(mel_spec, (1, 2), keepdim=True)
         return (mel_spec - mean) / (std + 1e-5)
 
 
