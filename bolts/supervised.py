@@ -30,7 +30,7 @@ class SupervisedTask(pl.LightningModule):
         self.projection = SupervisedHead()
         self.model_stride = self.encoder.model_stride()
         self.criterion = torch.nn.CTCLoss(
-            blank=config.dataset.n_classes-1, zero_infinity=True)
+            blank=config.dataset.n_classes-1, zero_infinity=True, reduction='none')
 
     def get_tokenizer(self):
         return self.trainer.datamodule.get_tokenizer()
@@ -54,7 +54,7 @@ class SupervisedTask(pl.LightningModule):
 
         h = self(img1)
         h = h.permute(1, 0, 2).contiguous()
-        return self.criterion(h, target, img1_len, target_len)
+        return torch.mean(self.criterion(h, target, img1_len, target_len))
 
     def training_step(self, batch, batch_idx):
         loss = self.shared_step(batch)
@@ -70,7 +70,7 @@ class SupervisedTask(pl.LightningModule):
 
         h = self(img1)
         h = h.permute(1, 0, 2).contiguous()
-        loss = self.criterion(h, target, img1_len, target_len)
+        loss = torch.mean(self.criterion(h, target, img1_len, target_len))
 
         h = torch.argmax(h.permute(1, 0, 2), 2)
         h = h.detach().cpu().numpy().tolist()
