@@ -101,13 +101,13 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
         for target in targets:
             new_target = []
             for i, token in enumerate(target):
-                if (i == 0) or ((token != config.dataset.n_classes - 1) and (i > 0 and token != target[i-1])):
+                if ((i == 0) or (i > 0 and token != target[i-1])) and (token < config.dataset.n_classes - 1):
                     new_target.append(token)
             new_targets.append(new_target)
         return new_targets
 
     def set_stage(self, stage):
-        if stage in ["val", "test"]:
+        if stage in ["val", "test", "train"]:
             self.transform = self.only_mel
             self.augmentation = self.no_augmentation
         else:
@@ -121,7 +121,7 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
             num_workers=config.dataloader.num_workers,
             pin_memory=True,
             drop_last=True,
-            shuffle=True,
+            shuffle=False,
             collate_fn=self._collate_fn
         )
 

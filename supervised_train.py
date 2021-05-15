@@ -2,7 +2,7 @@ import os
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from utils.config import config
-from bolts.supervised_data import SupervisedCommonVoiceDataModule
+from dataset.supervised_data import SupervisedCommonVoiceDataModule
 from bolts.supervised import SupervisedTask
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins import DDPPlugin
