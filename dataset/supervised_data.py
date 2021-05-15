@@ -107,7 +107,7 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
         return new_targets
 
     def set_stage(self, stage):
-        if stage in ["val", "test", "train"]:
+        if stage in ["val", "test"]:
             self.transform = self.only_mel
             self.augmentation = self.no_augmentation
         else:
@@ -121,7 +121,7 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
             num_workers=config.dataloader.num_workers,
             pin_memory=True,
             drop_last=True,
-            shuffle=False,
+            shuffle=True,
             collate_fn=self._collate_fn
         )
 
