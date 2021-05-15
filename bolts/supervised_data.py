@@ -101,7 +101,7 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
         for target in targets:
             new_target = []
             for i, token in enumerate(target):
-                if i != 0 and token != config.dataset.n_classes - 1 and token != target[i-1]:
+                if (i == 0) or ((token != config.dataset.n_classes - 1) and (i > 0 and token != target[i-1])):
                     new_target.append(token)
             new_targets.append(new_target)
         return new_targets

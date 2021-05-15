@@ -9,16 +9,18 @@ import jiwer
 import Levenshtein as Lev
 from statistics import mean
 
-def cer(s1, s2):
-        """
-        Computes the Character Error Rate, defined as the edit distance.
 
-        Arguments:
-            s1 (string): space-separated sentence
-            s2 (string): space-separated sentence
-        """
-        s1, s2, = s1.replace(' ', ''), s2.replace(' ', '')
-        return Lev.distance(s1, s2) / len(s1)
+def cer(s1, s2):
+    """
+    Computes the Character Error Rate, defined as the edit distance.
+
+    Arguments:
+        s1 (string): space-separated sentence
+        s2 (string): space-separated sentence
+    """
+    s1, s2, = s1.replace(' ', ''), s2.replace(' ', '')
+    return Lev.distance(s1, s2) / len(s1)
+
 
 class SupervisedTask(pl.LightningModule):
 
@@ -82,15 +84,14 @@ class SupervisedTask(pl.LightningModule):
         pred, ref = zip(*[(pd, rf) for (pd, rf) in zip(pred, ref) if rf != ""])
         pred, ref = list(pred), list(ref)
 
-
         wer_score = jiwer.wer(ref, pred)
         cer_score = mean([cer(rf, pd) for (rf, pd) in zip(ref, pred)])
-        result = {'val_loss': loss, 'wer': wer_score, 'cer': cer_score}
+        result = {'val_loss': loss.item(), 'wer': wer_score, 'cer': cer_score}
         return result
 
     def validation_epoch_end(self, output):
 
-        avg_val_loss = torch.stack([x['val_loss'] for x in output]).mean()
+        avg_val_loss = mean([x['val_loss'] for x in output])
         avg_error = mean([x['wer'] for x in output])
         avg_cer = mean([x['cer'] for x in output])
         self.log('val_loss', avg_val_loss)
