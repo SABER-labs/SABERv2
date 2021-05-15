@@ -45,7 +45,7 @@ class SupervisedTask(pl.LightningModule):
     def on_validation_start(self):
         self.trainer.datamodule.set_stage('val')
 
-    def on_train_start(self) -> None:
+    def on_validation_end(self) -> None:
         self.trainer.datamodule.set_stage('train')
 
     def shared_step(self, batch):
@@ -104,8 +104,11 @@ class SupervisedTask(pl.LightningModule):
         return items
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(
-        ), lr=config.trainer.learning_rate, weight_decay=config.trainer.weight_decay)
+        optimizer = torch.optim.Adam(
+            self.parameters(),
+            lr=config.trainer.learning_rate,
+            weight_decay=config.trainer.weight_decay
+        )
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=int(config.trainer.warmup_epochs *
