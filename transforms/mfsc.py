@@ -57,7 +57,6 @@ class SpecAug(torch.nn.Module):
 if __name__ == "__main__":
     import time
     import math
-    # waveform, samplerate = torchaudio.load(os.path.join(config.dataset.root, "clips", "common_voice_en_572372.mp3"))
     waveform, samplerate = torchaudio.load(os.path.join(
         config.dataset.root, "clips", "common_voice_en_572372.mp3"))
     augmention = torch.jit.script(torch.nn.Sequential(
