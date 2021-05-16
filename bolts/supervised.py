@@ -5,22 +5,8 @@ from utils.config import config
 import torch.nn.functional as F
 from model.projection_head import SupervisedHead
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
-import jiwer
-import Levenshtein as Lev
 from statistics import mean
-
-
-def cer(s1, s2):
-    """
-    Computes the Character Error Rate, defined as the edit distance.
-
-    Arguments:
-        s1 (string): space-separated sentence
-        s2 (string): space-separated sentence
-    """
-    s1, s2, = s1.replace(' ', ''), s2.replace(' ', '')
-    return Lev.distance(s1, s2) / len(s1)
-
+from utils.metrics import WER, CER
 
 class SupervisedTask(pl.LightningModule):
 
@@ -33,6 +19,8 @@ class SupervisedTask(pl.LightningModule):
         self.model_stride = self.encoder.model_stride()
         self.criterion = torch.nn.CTCLoss(
             blank=config.dataset.n_classes-1, zero_infinity=True, reduction='none')
+        self.wer_metric = WER()
+        self.cer_metric = CER()
 
     def get_tokenizer(self):
         return self.trainer.datamodule.get_tokenizer()
@@ -84,9 +72,9 @@ class SupervisedTask(pl.LightningModule):
         pred, ref = zip(*[(pd, rf) for (pd, rf) in zip(pred, ref) if rf != ""])
         pred, ref = list(pred), list(ref)
 
-        wer_score = jiwer.wer(ref, pred)
-        cer_score = mean([cer(rf, pd) for (rf, pd) in zip(ref, pred)])
-        result = {'val_loss': loss.item(), 'wer': wer_score, 'cer': cer_score}
+        self.wer_metric(ref, pred)
+        self.cer_metric(ref, pred)
+        result = {'val_loss': loss.item(), 'wer': self.wer_metric.compute(), 'cer': self.cer_metric.compute()}
         return result
 
     def validation_epoch_end(self, output):

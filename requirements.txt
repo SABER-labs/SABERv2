@@ -14,3 +14,4 @@ pytorch-lightning>=1.2.10
 torchscan
 sentencepiece
 jiwer
+torchmetrics
