@@ -8,8 +8,8 @@ import torch.nn as nn
 def conv_bn_act(in_size, out_size, kernel_size, stride=1, dilation=1):
     return nn.Sequential(
         nn.Conv1d(in_size, out_size, kernel_size, stride=stride, dilation=dilation),
-        nn.GroupNorm(1, out_size),
-        nn.Hardswish()
+        nn.BatchNorm1d(out_size),
+        nn.ReLU(inplace=True)
     )
 
 
@@ -28,7 +28,7 @@ def sepconv_bn(
                         stride=stride, dilation=dilation, groups=in_size,
                         padding=padding),
         torch.nn.Conv1d(in_size, out_size, kernel_size=1),
-        nn.GroupNorm(1, out_size)
+        nn.BatchNorm1d(out_size)
     )
 
 class QnetBlock(nn.Module):
@@ -39,18 +39,18 @@ class QnetBlock(nn.Module):
         self.layers = nn.ModuleList(sepconv_bn(
             in_size, out_size, kernel_size, stride))
         for _ in range(R - 1):
-            self.layers.append(nn.Hardswish())
+            self.layers.append(nn.ReLU(inplace=True))
             self.layers.append(sepconv_bn(
                 out_size, out_size, kernel_size, 1))
         self.layers = nn.Sequential(*self.layers)
 
         self.residual = nn.ModuleList()
         self.residual.append(torch.nn.Conv1d(in_size, out_size, kernel_size=1, stride=stride))
-        self.residual.append(torch.nn.GroupNorm(1, out_size))
+        self.residual.append(torch.nn.BatchNorm1d(out_size))
         self.residual = nn.Sequential(*self.residual)
 
     def forward(self, x):
-        return F.hardswish(self.residual(x) + self.layers(x))
+        return F.relu(self.residual(x) + self.layers(x))
 
 
 class QuartzNet(nn.Module):
@@ -82,9 +82,9 @@ class QuartzNet(nn.Module):
         return 4
 
     def forward(self, x):
-        c1 = F.hardswish(self.c1(x))
+        c1 = F.relu(self.c1(x))
         blocks = self.blocks(c1)
-        c2 = F.hardswish(self.c2(blocks))
+        c2 = F.relu(self.c2(blocks))
         c3 = self.c3(c2)
         return c3
 

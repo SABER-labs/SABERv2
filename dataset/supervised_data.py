@@ -67,7 +67,7 @@ class SupervisedCommonVoiceDataModule(pl.LightningDataModule):
                 config.dataset.root, config.dataset.text_corpus)
 
             train_cmd = '--input={input} --model_prefix={prefix} --vocab_size={sz} \
-            --max_sentencepiece_length=3 --character_coverage=1.0 --model_type=unigram \
+            --max_sentencepiece_length=2 --character_coverage=1.0 --model_type=unigram \
             --pad_id=0 --unk_id=1 --bos_id=-1 --eos_id=-1'.format(
                 input=text_corpus_path, prefix=config.dataset.spe_prefix,
                 sz=config.dataset.n_classes - 1)

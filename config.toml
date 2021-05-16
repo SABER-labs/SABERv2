@@ -11,7 +11,7 @@ unsupervised_train = "unsupervised_train.tsv"
 supervised_train = "supervised_train.tsv"
 text_corpus = "common_cv_corpus.txt"
 spe_prefix = "cv_tokenizer"
-n_classes = 1024
+n_classes = 256
 percent_split = 9
 sample_rate = 48000
 max_audio_in_s = 13.0
@@ -44,7 +44,7 @@ num_workers = 60
 n_mels = 80
 window_size_in_ms = 25
 stride_in_ms = 10
-model_sample_rate = 8000
+model_sample_rate = 16000
 
 [augmentations]
 vol_range_in_db = [-25, 10]
