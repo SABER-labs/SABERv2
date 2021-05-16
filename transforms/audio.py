@@ -60,8 +60,10 @@ class RandomSoxAugmentations(object):
                 'r').read().split("\n") if path]
 
     def __add_noise(self, sample: torch.Tensor):
-        noise, _ = torchaudio.load(
+        noise, rate = torchaudio.load(
             filepath=random.choice(self.noise_file_list))
+        if rate != config.audio.model_sample_rate:
+            noise, rate = apply_effects_tensor(noise, rate, [['rate', str(config.audio.model_sample_rate)]], channels_first=True)
         if noise.size(1) >= sample.size(1):
             noise = noise[:, :sample.size(1)]
         else:
