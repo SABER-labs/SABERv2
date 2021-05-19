@@ -16,7 +16,7 @@ def cer(s1, s2):
     return Lev.distance(s1, s2) / len(s1)
 
 class WER(Metric):
-    def __init__(self, dist_sync_on_step=False):
+    def __init__(self, dist_sync_on_step=True):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
         self.add_state("correct", default=torch.tensor(0.0), dist_reduce_fx="sum")
@@ -27,14 +27,10 @@ class WER(Metric):
         self.total += 1
 
     def compute(self):
-        return (self.correct / self.total).item()
-
-    def clear(self):
-        self.correct = torch.tensor(0.0)
-        self.total = torch.tensor(0.0)
+        return self.correct / self.total
 
 class CER(Metric):
-    def __init__(self, dist_sync_on_step=False):
+    def __init__(self, dist_sync_on_step=True):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
         self.add_state("correct", default=torch.tensor(0.0), dist_reduce_fx="sum")
@@ -45,8 +41,4 @@ class CER(Metric):
         self.total += len(target)
 
     def compute(self):
-        return (self.correct / self.total).item()
-
-    def clear(self):
-        self.correct = torch.tensor(0.0)
-        self.total = torch.tensor(0.0)
+        return self.correct / self.total
