@@ -39,11 +39,10 @@ class SupervisedTask(pl.LightningModule):
     def shared_step(self, batch):
         (img1, img1_len, target, target_len) = batch
 
-        img1_len = (img1_len / self.encoder.model_stride()).ceil_().to(dtype=img1_len.dtype,
-                                                                       device=img1_len.device)
-
         h = self(img1)
         h = h.permute(1, 0, 2).contiguous()
+
+        img1_len = torch.Tensor([h.size(0)] *  h.size(1)).to(dtype=img1_len.dtype, device=img1_len.device)
         return torch.mean(self.criterion(h, target, img1_len, target_len))
 
     def training_step(self, batch, batch_idx):
@@ -55,11 +54,10 @@ class SupervisedTask(pl.LightningModule):
 
         (img1, img1_len, target, target_len) = batch
 
-        img1_len = (img1_len / self.encoder.model_stride()).ceil_().to(dtype=img1_len.dtype,
-                                                                       device=img1_len.device)
-
         h = self(img1)
         h = h.permute(1, 0, 2).contiguous()
+
+        img1_len = torch.Tensor([h.size(0)] *  h.size(1)).to(dtype=img1_len.dtype, device=img1_len.device)
         loss = torch.mean(self.criterion(h, target, img1_len, target_len))
 
         h = torch.argmax(h.permute(1, 0, 2), 2)
@@ -85,6 +83,9 @@ class SupervisedTask(pl.LightningModule):
         self.log('val_loss', avg_val_loss, prog_bar=True)
         self.log('val_wer', avg_error, prog_bar=True)
         self.log('val_cer', avg_cer, prog_bar=True)
+
+        self.wer_metric.clear()
+        self.cer_metric.clear()
 
     def get_progress_bar_dict(self):
         items = super().get_progress_bar_dict()
