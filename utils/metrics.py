@@ -1,7 +1,6 @@
 import jiwer
 import Levenshtein as Lev
 import torch
-from torchmetrics import Metric
 from statistics import mean
 
 def cer(s1, s2):
@@ -15,30 +14,26 @@ def cer(s1, s2):
     s1, s2, = s1.replace(' ', ''), s2.replace(' ', '')
     return Lev.distance(s1, s2) / len(s1)
 
-class WER(Metric):
-    def __init__(self, dist_sync_on_step=True):
-        super().__init__(dist_sync_on_step=dist_sync_on_step)
+class AverageMeter(object):
+    def __init__(self):
+        self.reset()
 
-        self.add_state("correct", default=torch.tensor(0.0), dist_reduce_fx="sum")
-        self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
+    def reset(self):
+        self.correct = 0
+        self.total = 0
 
-    def update(self, target, preds):
+    def __call__(self, target, preds):
+        pass
+
+    def compute(self):
+        return self.correct / self.total
+
+class WER(AverageMeter):
+    def __call__(self, target, preds):
         self.correct += jiwer.wer(target, preds)
         self.total += 1
 
-    def compute(self):
-        return self.correct / self.total
-
-class CER(Metric):
-    def __init__(self, dist_sync_on_step=True):
-        super().__init__(dist_sync_on_step=dist_sync_on_step)
-
-        self.add_state("correct", default=torch.tensor(0.0), dist_reduce_fx="sum")
-        self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
-
-    def update(self, target, preds):
+class CER(AverageMeter):
+    def __call__(self, target, preds):
         self.correct += sum([cer(rf, pd) for (rf, pd) in zip(target, preds)])
         self.total += len(target)
-
-    def compute(self):
-        return self.correct / self.total

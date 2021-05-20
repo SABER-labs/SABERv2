@@ -72,13 +72,13 @@ class SupervisedTask(pl.LightningModule):
 
         self.wer_metric(ref, pred)
         self.cer_metric(ref, pred)
-        result = {'val_loss': loss, 'wer': self.wer_metric.compute(), 'cer': self.cer_metric.compute()}
+        result = {'val_loss': loss.item(), 'wer': self.wer_metric.compute(), 'cer': self.cer_metric.compute()}
         return result
 
     def validation_epoch_end(self, output):
-        avg_val_loss = torch.stack([x['val_loss'] for x in output]).mean().item()
-        avg_error = torch.stack([x['wer'] for x in output]).mean().item()
-        avg_cer = torch.stack([x['cer'] for x in output]).mean().item()
+        avg_val_loss = mean([x['val_loss'] for x in output])
+        avg_error = mean([x['wer'] for x in output])
+        avg_cer = mean([x['cer'] for x in output])
         self.log('val_loss', avg_val_loss, prog_bar=True)
         self.log('val_wer', avg_error, prog_bar=True)
         self.log('val_cer', avg_cer, prog_bar=True)

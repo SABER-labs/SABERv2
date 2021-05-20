@@ -79,7 +79,7 @@ class Streaming_convnets(nn.Module):
         self.final_feature_count = 27 * n_mels
 
     def forward(self, x):
-        x = self.layers(x)
+        x = self.layers(x.unsqueeze(1))
         return x.view(x.shape[0], self.final_feature_count, -1)
 
     def model_stride(self):
