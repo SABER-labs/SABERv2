@@ -18,7 +18,7 @@ class SupervisedTask(pl.LightningModule):
         self.projection = SupervisedHead()
         self.model_stride = self.encoder.model_stride()
         self.criterion = torch.nn.CTCLoss(
-            blank=config.dataset.n_classes-1, zero_infinity=True, reduction='none')
+            blank=config.dataset.n_classes-1, zero_infinity=False, reduction='none')
         self.wer_metric = WER()
         self.cer_metric = CER()
 

@@ -35,13 +35,13 @@ if __name__ == "__main__":
     unsupervised_dataset.to_csv(
         unsupervised_path,
         sep="\t",
-        quoting=csv.QUOTE_NONE,
+        quoting=csv.QUOTE_MINIMAL,
         header=True,
         index=False)
     supervised_dataset.to_csv(
         supervised_path,
         sep="\t",
-        quoting=csv.QUOTE_NONE,
+        quoting=csv.QUOTE_MINIMAL,
         header=True,
         index=False)
     print(

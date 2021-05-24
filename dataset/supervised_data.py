@@ -178,14 +178,16 @@ if __name__ == "__main__":
     from tqdm import tqdm
     loader = SupervisedCommonVoiceDataModule()
     loader.prepare_data()
-    loader.setup('val')
-    for i, batch in enumerate(tqdm(loader.val_dataloader())):
+    loader.setup('train')
+    for i, batch in enumerate(tqdm(loader.train_dataloader())):
+        batch = loader.transfer_batch_to_device(batch, 'cuda')
+        batch = loader.on_after_batch_transfer(batch, 0)
         ref = loader.get_tokenizer().decode(batch[2].detach().cpu().numpy().tolist())
+        encoded_ref_lengths = batch[3].detach().cpu().numpy().tolist()
         lengths = [len(rf) for rf in ref]
-        if 0 in lengths:
-            break
-    print(f"Sentence with issue was: {ref}")
-        # print(ref)
-        # print(batch[0].shape, batch[1].shape, batch[2], batch[3])
-        # if i > 0 and i % 1 == 0:
-        #     break
+        input_lengths = batch[1].detach().cpu().numpy().tolist()
+        input_lengths = [input_length // 2 for  input_length in input_lengths]
+
+        for i, (in_len, tar_len, sen_len) in enumerate(zip(input_lengths, encoded_ref_lengths, lengths)):
+            if in_len <= 2 * tar_len:
+                print(f"Sentence with issue was: {ref[i]}, input_length: {in_len}, target_length: {tar_len}, sentence_length: {sen_len}")
