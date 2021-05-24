@@ -186,8 +186,8 @@ if __name__ == "__main__":
         encoded_ref_lengths = batch[3].detach().cpu().numpy().tolist()
         lengths = [len(rf) for rf in ref]
         input_lengths = batch[1].detach().cpu().numpy().tolist()
-        input_lengths = [input_length // 2 for  input_length in input_lengths]
+        input_lengths = [input_length // 4 for  input_length in input_lengths]
 
         for i, (in_len, tar_len, sen_len) in enumerate(zip(input_lengths, encoded_ref_lengths, lengths)):
-            if in_len <= 2 * tar_len:
+            if in_len <= tar_len:
                 print(f"Sentence with issue was: {ref[i]}, input_length: {in_len}, target_length: {tar_len}, sentence_length: {sen_len}")
