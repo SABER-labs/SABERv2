@@ -15,3 +15,4 @@ torchscan
 sentencepiece
 jiwer
 torchmetrics
+torch_optimizer

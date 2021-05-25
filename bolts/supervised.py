@@ -1,8 +1,9 @@
 import pytorch_lightning as pl
 import torch
+import torch.nn.functional as F
+import torch_optimizer as optim
 from model.quartznet import QuartzNet
 from utils.config import config
-import torch.nn.functional as F
 from model.projection_head import SupervisedHead
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from statistics import mean
@@ -91,9 +92,10 @@ class SupervisedTask(pl.LightningModule):
         return items
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(
+        optimizer = optim.RAdam(
             self.parameters(),
             lr=config.trainer.learning_rate,
+            eps=1e-6,
             weight_decay=config.trainer.weight_decay
         )
         scheduler = LinearWarmupCosineAnnealingLR(
